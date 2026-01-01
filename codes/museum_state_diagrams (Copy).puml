@@ -1,0 +1,811 @@
+@startuml Booking State Diagram
+
+skinparam state {
+  BackgroundColor LightBlue
+  BorderColor DarkBlue
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **Booking Lifecycle State Diagram**
+
+[*] --> Draft : User starts booking
+
+state "Draft" as Draft
+state "Confirmed" as Confirmed
+state "Paid" as Paid
+state "Completed" as Completed
+state "Cancelled" as Cancelled
+state "Refunded" as Refunded
+
+Draft --> Confirmed : Submit booking\n[capacity available]
+
+Draft --> [*] : User abandons
+
+Confirmed --> Paid : Payment successful\n[payment gateway confirms]
+
+Confirmed --> Confirmed : Modify booking\n[> 24 hours before visit]
+
+Confirmed --> Cancelled : Cancel booking\n[> 48 hours before visit]
+
+Confirmed --> Cancelled : Admin cancels\n[policy override]
+
+Confirmed --> Completed : Visit date passed\n[visit completed]
+
+Paid --> Paid : Modify booking\n[> 24 hours before visit]
+
+Paid --> Cancelled : Cancel booking\n[> 48 hours before visit]
+
+Paid --> Cancelled : Admin cancels\n[policy override]
+
+Paid --> Completed : Visit date passed\n[visit completed]
+
+Cancelled --> Refunded : Refund processed\n[payment was made]
+
+Cancelled --> [*] : No refund needed\n[no payment made]
+
+Refunded --> [*] : Booking archived
+
+Completed --> [*] : Booking archived
+
+note right of Draft
+  **Draft State:**
+  - Date and time selected
+  - Not confirmed yet
+  - Can be modified freely
+  - May be abandoned
+end note
+
+note right of Confirmed
+  **Confirmed State:**
+  - Capacity reserved
+  - Reference number generated
+  - Confirmation email sent
+  - Can be modified (> 24 hours)
+  - Can be cancelled (> 48 hours)
+  - Awaiting payment (optional)
+end note
+
+note right of Paid
+  **Paid State:**
+  - Payment successful
+  - Transaction ID saved
+  - Can be modified (> 24 hours)
+  - Can be cancelled with refund (> 48 hours)
+end note
+
+note bottom of Cancelled
+  **Cancelled State:**
+  - Reserved capacity released
+  - Cancellation email sent
+  - Logged in Audit Log
+  - If paid → refund
+  - If not paid → archive
+end note
+
+note bottom of Completed
+  **Completed State:**
+  - Visit date has passed
+  - Service delivered
+  - Cannot be modified or cancelled
+  - Ready for archiving
+end note
+
+note bottom of Refunded
+  **Refunded State:**
+  - Refund processed
+  - Refund transaction ID saved
+  - Refund notification sent
+  - Ready for archiving
+end note
+
+legend right
+  **Transitions:**
+  • Black line: normal transition
+  • [condition]: transition condition
+  • (text): triggering event
+  
+  **Time Constraints:**
+  • Modification: > 24 hours before visit
+  • Cancellation: > 48 hours before visit
+  • Admin override: at any time
+end legend
+
+@enduml
+
+@startuml User Account State Diagram
+
+skinparam state {
+  BackgroundColor LightCyan
+  BorderColor DarkBlue
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **User Account Lifecycle State Diagram**
+
+[*] --> Unregistered : User visits website
+
+state "Unregistered" as Unregistered
+state "Pending Verification" as Pending
+state "Active" as Active
+state "Inactive" as Inactive
+state "Suspended" as Suspended
+state "Deleted" as Deleted
+
+Unregistered --> Pending : Register account\n[valid registration data]
+
+Pending --> Active : Verify email\n[token valid & not expired]
+
+Pending --> Deleted : Verification expired\n[> 7 days no verification]
+
+Pending --> Deleted : User requests deletion
+
+Active --> Inactive : User deactivates\n[user request]
+
+Active --> Suspended : Admin suspends\n[policy violation]
+
+Active --> Deleted : User deletes account\n[user request]
+
+Active --> Active : Login\n[valid credentials]
+
+Active --> Active : Update profile\n[valid data]
+
+Active --> Active : Change password\n[valid old password]
+
+Active --> Active : Create booking\n[valid booking data]
+
+Inactive --> Active : User reactivates\n[user request]
+
+Inactive --> Deleted : Admin deletes\n[> 365 days inactive]
+
+Suspended --> Active : Admin reinstates\n[issue resolved]
+
+Suspended --> Deleted : Admin deletes permanently\n[severe violation]
+
+Deleted --> [*] : Account purged\n[after 30 days]
+
+note right of Unregistered
+  **Unregistered State:**
+  - Anonymous visitor
+  - Can browse content
+  - Cannot book
+  - Cannot register for events
+end note
+
+note right of Pending
+  **Pending Verification State:**
+  - Account created
+  - Email not verified
+  - Verification token valid 24 hours
+  - If not verified within 7 days → deleted
+  - Cannot login
+end note
+
+note right of Active
+  **Active State:**
+  - Email verified
+  - Can login
+  - Can book
+  - Can register for events
+  - Can update profile
+  - All features available
+end note
+
+note bottom of Inactive
+  **Inactive State:**
+  - Account temporarily disabled
+  - By user request
+  - Cannot login
+  - Data preserved
+  - Can be reactivated
+  - Auto-deleted after 365 days
+end note
+
+note bottom of Suspended
+  **Suspended State:**
+  - Suspended by admin
+  - Due to policy violation
+  - Cannot login
+  - Data preserved
+  - Can be reactivated by admin
+  - May be permanently deleted
+end note
+
+note bottom of Deleted
+  **Deleted State:**
+  - Marked for deletion
+  - 30 day grace period
+  - Data hidden
+  - Can be recovered within 30 days
+  - After 30 days → permanent deletion
+end note
+
+legend right
+  **Transition Reasons:**
+  • Registration: optional
+  • Verification: required
+  • Suspension: policy violation
+  • Deletion: user request or system
+  
+  **Time Periods:**
+  • Verification token: 24 hours
+  • Delete unverified: 7 days
+  • Delete inactive: 365 days
+  • Deletion grace period: 30 days
+end legend
+
+@enduml
+
+@startuml Event Registration State Diagram
+
+skinparam state {
+  BackgroundColor LightYellow
+  BorderColor DarkOrange
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **Event Registration Lifecycle State Diagram**
+
+[*] --> Browsing : User views events
+
+state "Browsing" as Browsing
+state "Registered" as Registered
+state "Confirmed" as Confirmed
+state "Attended" as Attended
+state "No Show" as NoShow
+state "Cancelled" as Cancelled
+
+Browsing --> Registered : Register for event\n[capacity available]\n[registration required]
+
+Browsing --> Confirmed : Direct attendance\n[no registration required]
+
+Browsing --> [*] : User leaves
+
+Registered --> Confirmed : Event organizer confirms\n[manual confirmation]
+
+Registered --> Cancelled : User cancels\n[before event date]
+
+Registered --> Cancelled : Event cancelled\n[event status = cancelled]
+
+Registered --> Attended : User attends\n[check-in at event]
+
+Registered --> NoShow : Event completed\n[user didn't attend]
+
+Confirmed --> Attended : User attends\n[check-in at event]
+
+Confirmed --> NoShow : Event completed\n[user didn't attend]
+
+Confirmed --> Cancelled : User cancels\n[before event date]
+
+Confirmed --> Cancelled : Event cancelled\n[event status = cancelled]
+
+Attended --> [*] : Registration archived
+
+NoShow --> [*] : Registration archived
+
+Cancelled --> [*] : Registration archived
+
+note right of Browsing
+  **Browsing State:**
+  - User browsing events
+  - Can filter events
+  - View details
+  - Check availability
+end note
+
+note right of Registered
+  **Registered State:**
+  - Registered for event
+  - Available capacity reduced
+  - Confirmation email sent
+  - Waiting for event
+  - Can cancel before date
+end note
+
+note right of Confirmed
+  **Confirmed State:**
+  - Attendance confirmed
+  - (for events requiring manual confirmation)
+  - Or direct attendance without registration
+  - Ready to attend
+end note
+
+note bottom of Attended
+  **Attended State:**
+  - Checked-in at event
+  - Attendance recorded
+  - Attendee counter increased
+  - Ready for archiving
+end note
+
+note bottom of NoShow
+  **No Show State:**
+  - Event completed
+  - User did not attend
+  - No-show recorded
+  - Capacity released (for future events)
+  - Ready for archiving
+end note
+
+note bottom of Cancelled
+  **Cancelled State:**
+  - Registration cancelled
+  - May be by user
+  - Or due to event cancellation
+  - Capacity released
+  - Cancellation notification sent
+  - Ready for archiving
+end note
+
+legend right
+  **Event Types:**
+  • With registration: requires pre-registration
+  • Without registration: direct attendance
+  
+  **Confirmations:**
+  • Manual: needs organizer approval
+  • Automatic: immediately after registration
+  
+  **Capacity:**
+  • Decreases on registration
+  • Increases on cancellation
+  • Fixed on attendance/no-show
+end legend
+
+@enduml
+
+@startuml Session State Diagram
+
+skinparam state {
+  BackgroundColor LightGreen
+  BorderColor DarkGreen
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **Session Lifecycle State Diagram**
+
+[*] --> NoSession : User not logged in
+
+state "No Session" as NoSession
+state "Active" as Active
+state "Idle" as Idle
+state "Expired" as Expired
+state "Terminated" as Terminated
+
+NoSession --> Active : Successful login\n[valid credentials]
+
+Active --> Active : User activity\n[page request, API call]
+
+Active --> Idle : No activity\n[> 15 minutes]
+
+Active --> Terminated : User logout\n[manual logout]
+
+Active --> Expired : Session timeout\n[> 24 hours from creation]
+
+Active --> Terminated : Security event\n[suspicious activity detected]
+
+Active --> Terminated : Password changed\n[all sessions invalidated]
+
+Idle --> Active : User returns\n[user activity resumed]
+
+Idle --> Expired : Idle timeout\n[> 30 minutes idle]
+
+Idle --> Terminated : User logout\n[manual logout]
+
+Expired --> [*] : Session cleaned up\n[removed from database]
+
+Terminated --> [*] : Session cleaned up\n[removed from database]
+
+note right of NoSession
+  **No Session State:**
+  - No active session
+  - User not logged in
+  - Can browse public content
+  - Cannot access protected features
+end note
+
+note right of Active
+  **Active State:**
+  - Session active and valid
+  - Update last_activity_timestamp
+  - Can access all features
+  - Session cookie valid
+  - Track IP & User Agent
+end note
+
+note right of Idle
+  **Idle State:**
+  - No activity for 15 minutes
+  - Session still valid
+  - Can return without re-login
+  - If idle continues → expired
+end note
+
+note bottom of Expired
+  **Expired State:**
+  - Session time expired
+  - May be due to:
+    • 24 hours passed from creation
+    • Idle for more than 30 minutes
+  - Deleted from database
+  - Requires re-login
+end note
+
+note bottom of Terminated
+  **Terminated State:**
+  - Manual session termination
+  - May be due to:
+    • Manual logout
+    • Suspicious security event
+    • Password change
+    • Account suspension
+  - Deleted from database
+  - Session cookie invalidated
+end note
+
+legend right
+  **Time Periods:**
+  • Active → Idle: 15 minutes
+  • Idle → Expired: 30 minutes
+  • Creation → Expired: 24 hours
+  
+  **Security Measures:**
+  • Log IP Address
+  • Log User Agent
+  • Monitor suspicious activities
+  • Terminate all sessions on password change
+  
+  **Cleanup:**
+  • Auto-delete expired sessions
+  • Periodic cleanup every hour
+end legend
+
+@enduml
+
+@startuml Payment Transaction State Diagram
+
+skinparam state {
+  BackgroundColor LightSalmon
+  BorderColor DarkRed
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **Payment Transaction State Diagram**
+
+[*] --> Pending : Initiate payment\n[booking created]
+
+state "Pending" as Pending
+state "Processing" as Processing
+state "Authorized" as Authorized
+state "Completed" as Completed
+state "Failed" as Failed
+state "Refund Pending" as RefundPending
+state "Refunded" as Refunded
+state "Cancelled" as Cancelled
+
+Pending --> Processing : User submits payment\n[payment details entered]
+
+Pending --> Cancelled : User cancels\n[timeout or manual cancel]
+
+Processing --> Authorized : Payment gateway authorizes\n[funds available]
+
+Processing --> Failed : Payment gateway rejects\n[insufficient funds, invalid card]
+
+Authorized --> Completed : Capture successful\n[funds captured]
+
+Authorized --> Failed : Capture failed\n[technical error]
+
+Completed --> RefundPending : Refund requested\n[booking cancelled]
+
+RefundPending --> Refunded : Refund successful\n[refund processed]
+
+RefundPending --> Failed : Refund failed\n[technical error]
+
+Failed --> [*] : Transaction closed
+
+Cancelled --> [*] : Transaction closed
+
+Completed --> [*] : Transaction archived\n[no refund needed]
+
+Refunded --> [*] : Transaction archived
+
+note right of Pending
+  **Pending State:**
+  - Booking created
+  - Waiting for payment details entry
+  - Timeout: 15 minutes
+  - No connection to payment gateway yet
+end note
+
+note right of Processing
+  **Processing State:**
+  - Data sent to payment gateway
+  - Card validation check
+  - Available balance check
+  - Transaction code generation
+end note
+
+note right of Authorized
+  **Authorized State:**
+  - Payment authorized
+  - Amount reserved on card
+  - Not captured yet
+  - Valid for limited time
+end note
+
+note right of Completed
+  **Completed State:**
+  - Funds captured successfully
+  - Booking status updated to "paid"
+  - transaction_id saved
+  - Receipt sent
+  - Can be refunded if needed
+end note
+
+note bottom of Failed
+  **Failed State:**
+  - Transaction failed
+  - Possible reasons:
+    • Insufficient funds
+    • Invalid card
+    • Technical error
+    • Bank rejection
+  - Cancel booking (if needed)
+  - Release capacity
+end note
+
+note bottom of RefundPending
+  **Refund Pending State:**
+  - Refund request submitted
+  - Connecting to payment gateway
+  - Processing refund
+  - May take 3-5 business days
+end note
+
+note bottom of Refunded
+  **Refunded State:**
+  - Refund successful
+  - refund_transaction_id saved
+  - Booking status updated to "refunded"
+  - Refund notification sent
+  - Ready for archiving
+end note
+
+legend right
+  **Supported Payment Gateways:**
+  • Credit/Debit cards
+  • PayPal (optional)
+  • Pay on visit
+  
+  **Timeouts:**
+  • Pending → Cancelled: 15 minutes
+  • Processing: 30 seconds - 2 minutes
+  • Refund: 3-5 business days
+  
+  **Security:**
+  • PCI DSS Compliant
+  • Card tokenization
+  • 3D Secure (optional)
+  • Fraud detection
+end legend
+
+@enduml
+
+@startuml Email Verification Token State Diagram
+
+skinparam state {
+  BackgroundColor Lavender
+  BorderColor Purple
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **Email Verification Token State Diagram**
+
+[*] --> Generated : Token created\n[user registers]
+
+state "Generated" as Generated
+state "Sent" as Sent
+state "Used" as Used
+state "Expired" as Expired
+
+Generated --> Sent : Email sent\n[SMTP successful]
+
+Generated --> Generated : Resend requested\n[generate new token]
+
+Sent --> Used : User clicks link\n[token valid & not expired]
+
+Sent --> Expired : Time elapsed\n[> 24 hours]
+
+Sent --> Sent : Resend requested\n[generate new token]
+
+Used --> [*] : Account activated
+
+Expired --> Generated : New token requested\n[user requests new verification]
+
+Expired --> [*] : Account deleted\n[> 7 days no verification]
+
+note right of Generated
+  **Generated State:**
+  - Unique token created (32 chars)
+  - Saved in database
+  - Linked to user_id
+  - Valid for 24 hours
+  - Ready to send
+end note
+
+note right of Sent
+  **Sent State:**
+  - Email sent successfully
+  - Email contains verification link
+  - Waiting for user click
+  - Can request resend
+  - Valid for 24 hours
+end note
+
+note bottom of Used
+  **Used State:**
+  - Link clicked
+  - Token validity verified
+  - User account activated
+  - is_used = true
+  - Cannot be used again
+end note
+
+note bottom of Expired
+  **Expired State:**
+  - 24 hours passed from generation
+  - Token not used
+  - Cannot be used for verification
+  - Can request new token
+  - If 7 days pass → delete account
+end note
+
+legend right
+  **Time Periods:**
+  • Token validity: 24 hours
+  • Account deletion: 7 days without verification
+  
+  **Security:**
+  • Cryptographically secure random token
+  • Single use only
+  • HTTPS for links
+  • Hash storage in some apps
+  
+  **Resend:**
+  • Generates new token
+  • Invalidates old token
+  • Max 3 times per hour
+end legend
+
+@enduml
+
+@startuml Content Moderation State Diagram
+
+skinparam state {
+  BackgroundColor Wheat
+  BorderColor Brown
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **Content Moderation State Diagram**
+
+[*] --> Draft : Admin creates content
+
+state "Draft" as Draft
+state "Active" as Active
+state "Inactive" as Inactive
+state "Under Review" as Review
+state "Archived" as Archived
+
+Draft --> Active : Publish content\n[all required fields filled]
+
+Draft --> Draft : Save draft\n[auto-save or manual]
+
+Draft --> Archived : Discard draft\n[delete permanently]
+
+Active --> Active : Update content\n[edit published content]
+
+Active --> Inactive : Deactivate\n[temporary removal]
+
+Active --> Review : Flag for review\n[quality check or complaint]
+
+Active --> Archived : Archive content\n[no longer relevant]
+
+Inactive --> Active : Reactivate\n[admin decision]
+
+Inactive --> Archived : Archive inactive\n[no longer needed]
+
+Review --> Active : Approve\n[review passed]
+
+Review --> Inactive : Reject\n[needs modifications]
+
+Review --> Archived : Remove permanently\n[violates policies]
+
+Archived --> [*] : Purge content\n[after retention period]
+
+note right of Draft
+  **Draft State:**
+  - Content being created
+  - Not visible to users
+  - Can be edited freely
+  - Auto-save enabled
+  - Can be published or deleted
+end note
+
+note right of Active
+  **Active State:**
+  - Content published
+  - Visible to users
+  - Appears in search results
+  - Can be edited
+  - Can be deactivated or archived
+  - Track views and interactions
+end note
+
+note right of Inactive
+  **Inactive State:**
+  - Content temporarily disabled
+  - Not visible to users
+  - Does not appear in search
+  - Data preserved
+  - Can be reactivated
+  - Reasons for deactivation:
+    • Linked bookings
+    • Upcoming update
+    • Periodic review
+end note
+
+note bottom of Review
+  **Under Review State:**
+  - Content under review
+  - May be due to:
+    • Quality check
+    • User complaint
+    • Periodic review
+  - Temporarily not visible
+  - Awaiting admin decision
+end note
+
+note bottom of Archived
+  **Archived State:**
+  - Content archived
+  - Permanently inactive
+  - Data preserved for records
+  - Cannot be reactivated
+  - Permanent deletion after retention period
+  - Used for historical statistics
+end note
+
+legend right
+  **Content Types:**
+  • Plans (visit plans)
+  • Events
+  • Food Facilities (restaurants)
+  • Educational Collections
+  • Kids Activities
+  
+  **Retention Period:**
+  • Active: unlimited
+  • Inactive: 90 days then archive
+  • Archived: 2 years then permanent deletion
+  
+  **Review:**
+  • Periodic: every 6 months
+  • On complaint: immediate
+  • Before major events: proactive
+end legend
+
+@enduml

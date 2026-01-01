@@ -1,0 +1,1168 @@
+@startuml User Registration Sequence
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam BoxPadding 10
+
+title **User Registration Process\n(عملية تسجيل مستخدم جديد)**
+
+actor "User\n(مستخدم)" as User
+participant "Registration\nController" as RegCtrl
+participant "Validator" as Valid
+participant "Security" as Sec
+participant "User\nModel" as UserModel
+participant "Database" as DB
+participant "Token\nGenerator" as Token
+participant "Email\nService" as Email
+
+User -> RegCtrl: submitRegistrationForm(\nemail, password, fullName,\nphoneNumber, nationality)
+activate RegCtrl
+
+RegCtrl -> Valid: validateRegistrationData(data)
+activate Valid
+Valid -> Valid: checkRequiredFields()
+Valid -> Valid: validateEmailFormat()
+Valid -> Valid: validatePasswordStrength()
+Valid -> Valid: validatePhoneNumber()
+Valid --> RegCtrl: validationResult
+deactivate Valid
+
+alt Data Invalid
+    RegCtrl --> User: displayValidationErrors(\nerrors)
+else Data Valid
+    RegCtrl -> UserModel: checkEmailExists(email)
+    activate UserModel
+    UserModel -> DB: SELECT * FROM users\nWHERE email = ?
+    activate DB
+    DB --> UserModel: queryResult
+    deactivate DB
+    UserModel --> RegCtrl: emailExists
+    deactivate UserModel
+    
+    alt Email Already Exists
+        RegCtrl --> User: displayError(\n"البريد الإلكتروني مسجل مسبقاً")
+    else Email Available
+        RegCtrl -> Sec: hashPassword(password)
+        activate Sec
+        Sec -> Sec: bcrypt(password, salt)
+        Sec --> RegCtrl: passwordHash
+        deactivate Sec
+        
+        RegCtrl -> UserModel: createUser(\nemail, passwordHash,\nfullName, phoneNumber,\nnationality)
+        activate UserModel
+        UserModel -> DB: INSERT INTO users\n(email, password_hash,\nfull_name, phone_number,\nnationality, account_status,\nuser_role, email_verified)\nVALUES (?, ?, ?, ?, ?, 'pending',\n'visitor', false)
+        activate DB
+        DB --> UserModel: userId
+        deactivate DB
+        UserModel --> RegCtrl: newUser
+        deactivate UserModel
+        
+        RegCtrl -> Token: generateVerificationToken(userId)
+        activate Token
+        Token -> Token: generateSecureToken(32)
+        Token -> DB: INSERT INTO\nemail_verification_tokens\n(user_id, token,\nexpiration_timestamp)\nVALUES (?, ?, NOW() + 24 HOURS)
+        activate DB
+        DB --> Token: success
+        deactivate DB
+        Token --> RegCtrl: verificationToken
+        deactivate Token
+        
+        RegCtrl -> Email: sendVerificationEmail(\nemail, verificationToken)
+        activate Email
+        Email -> Email: buildVerificationLink(token)
+        Email -> Email: composeEmail(\nsubject, body, link)
+        Email -> Email: sendSMTP()
+        Email --> RegCtrl: emailSent
+        deactivate Email
+        
+        RegCtrl --> User: displaySuccess(\n"تم إرسال بريد التحقق")
+    end
+end
+
+deactivate RegCtrl
+
+@enduml
+
+@startuml Email Verification Sequence
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title **Email Verification Process\n(عملية التحقق من البريد الإلكتروني)**
+
+actor "User\n(مستخدم)" as User
+participant "Auth\nController" as AuthCtrl
+participant "Token\nModel" as TokenModel
+participant "User\nModel" as UserModel
+participant "Database" as DB
+
+User -> AuthCtrl: clickVerificationLink(token)
+activate AuthCtrl
+
+AuthCtrl -> TokenModel: validateToken(token)
+activate TokenModel
+
+TokenModel -> DB: SELECT * FROM\nemail_verification_tokens\nWHERE token = ?\nAND is_used = false
+activate DB
+DB --> TokenModel: tokenRecord
+deactivate DB
+
+alt Token Not Found
+    TokenModel --> AuthCtrl: tokenInvalid
+    AuthCtrl --> User: displayError(\n"رمز تحقق غير صحيح")
+else Token Found
+    TokenModel -> TokenModel: checkExpiration(\ntokenRecord.expiration_timestamp)
+    
+    alt Token Expired
+        TokenModel --> AuthCtrl: tokenExpired
+        AuthCtrl --> User: displayError(\n"انتهت صلاحية الرمز")
+    else Token Valid
+        TokenModel --> AuthCtrl: tokenValid, userId
+        deactivate TokenModel
+        
+        AuthCtrl -> UserModel: activateUserAccount(userId)
+        activate UserModel
+        UserModel -> DB: UPDATE users\nSET account_status = 'active',\nemail_verified = true\nWHERE id = ?
+        activate DB
+        DB --> UserModel: success
+        deactivate DB
+        UserModel --> AuthCtrl: accountActivated
+        deactivate UserModel
+        
+        AuthCtrl -> TokenModel: markTokenAsUsed(token)
+        activate TokenModel
+        TokenModel -> DB: UPDATE\nemail_verification_tokens\nSET is_used = true\nWHERE token = ?
+        activate DB
+        DB --> TokenModel: success
+        deactivate DB
+        deactivate TokenModel
+        
+        AuthCtrl --> User: displaySuccess(\n"تم تفعيل الحساب بنجاح")
+        AuthCtrl --> User: redirectToLogin()
+    end
+end
+
+deactivate AuthCtrl
+
+@enduml
+
+@startuml User Login Sequence
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title **User Login Process\n(عملية تسجيل الدخول)**
+
+actor "User\n(مستخدم)" as User
+participant "Auth\nController" as AuthCtrl
+participant "Rate\nLimiter" as RateLimit
+participant "User\nModel" as UserModel
+participant "Security" as Sec
+participant "Session\nManager" as Session
+participant "Database" as DB
+participant "Audit\nLogger" as Logger
+
+User -> AuthCtrl: submitLogin(email, password)
+activate AuthCtrl
+
+AuthCtrl -> RateLimit: checkLoginAttempts(\nip_address)
+activate RateLimit
+RateLimit -> DB: SELECT COUNT(*)\nFROM failed_login_attempts\nWHERE ip_address = ?\nAND timestamp > NOW() - 15 MINUTES
+activate DB
+DB --> RateLimit: attemptCount
+deactivate DB
+
+alt Too Many Attempts
+    RateLimit --> AuthCtrl: rateLimitExceeded
+    AuthCtrl --> User: displayError(\n"تم تجاوز الحد الأقصى\nللمحاولات")
+    deactivate RateLimit
+else Within Limit
+    deactivate RateLimit
+    
+    AuthCtrl -> UserModel: findUserByEmail(email)
+    activate UserModel
+    UserModel -> DB: SELECT * FROM users\nWHERE email = ?
+    activate DB
+    DB --> UserModel: userRecord
+    deactivate DB
+    
+    alt User Not Found
+        UserModel --> AuthCtrl: userNotFound
+        AuthCtrl -> Logger: logFailedAttempt(\nemail, ip_address)
+        activate Logger
+        Logger -> DB: INSERT INTO audit_logs
+        activate DB
+        deactivate DB
+        deactivate Logger
+        AuthCtrl --> User: displayError(\n"بيانات الدخول غير صحيحة")
+    else User Found
+        UserModel --> AuthCtrl: userRecord
+        deactivate UserModel
+        
+        AuthCtrl -> AuthCtrl: checkAccountStatus(\nuserRecord.account_status)
+        
+        alt Account Inactive
+            AuthCtrl --> User: displayError(\n"الحساب غير نشط")
+        else Account Active
+            AuthCtrl -> Sec: verifyPassword(\npassword,\nuserRecord.password_hash)
+            activate Sec
+            Sec -> Sec: password_verify()
+            Sec --> AuthCtrl: passwordValid
+            deactivate Sec
+            
+            alt Password Invalid
+                AuthCtrl -> DB: INSERT INTO\nfailed_login_attempts
+                activate DB
+                deactivate DB
+                AuthCtrl -> Logger: logFailedAttempt(\nemail, ip_address)
+                activate Logger
+                Logger -> DB: INSERT INTO audit_logs
+                activate DB
+                deactivate DB
+                deactivate Logger
+                AuthCtrl --> User: displayError(\n"بيانات الدخول غير صحيحة")
+            else Password Valid
+                AuthCtrl -> Session: createSession(\nuserRecord.id)
+                activate Session
+                Session -> Session: generateSessionId()
+                Session -> DB: INSERT INTO sessions\n(session_id, user_id,\ncreation_timestamp,\nexpiration_timestamp)\nVALUES (?, ?, NOW(),\nNOW() + 24 HOURS)
+                activate DB
+                DB --> Session: success
+                deactivate DB
+                Session --> AuthCtrl: sessionId
+                deactivate Session
+                
+                AuthCtrl -> UserModel: updateLastLogin(userId)
+                activate UserModel
+                UserModel -> DB: UPDATE users\nSET last_login_timestamp\n= NOW()\nWHERE id = ?
+                activate DB
+                deactivate DB
+                deactivate UserModel
+                
+                AuthCtrl -> Logger: logSuccessfulLogin(\nuserId, ip_address)
+                activate Logger
+                Logger -> DB: INSERT INTO audit_logs\n(user_id, action, ip_address)\nVALUES (?, 'login', ?)
+                activate DB
+                deactivate DB
+                deactivate Logger
+                
+                AuthCtrl --> User: setSessionCookie(sessionId)
+                AuthCtrl --> User: redirectToDashboard()
+            end
+        end
+    end
+end
+
+deactivate AuthCtrl
+
+@enduml
+
+@startuml Create Booking Sequence
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+skinparam BoxPadding 10
+
+title **Create Booking Process\n(عملية إنشاء حجز)**
+
+actor "User\n(زائر مسجل)" as User
+participant "Booking\nController" as BookCtrl
+participant "Session\nManager" as Session
+participant "Validator" as Valid
+participant "Capacity\nManager" as Capacity
+participant "Booking\nModel" as BookModel
+participant "Database" as DB
+participant "Email\nService" as Email
+participant "Payment\nGateway" as Payment
+
+User -> BookCtrl: submitBookingRequest(\nvisitDate, timeSlot,\nvisitorQuantity, planId)
+activate BookCtrl
+
+BookCtrl -> Session: validateUserSession()
+activate Session
+Session -> DB: SELECT * FROM sessions\nWHERE session_id = ?\nAND expiration_timestamp > NOW()
+activate DB
+DB --> Session: sessionData
+deactivate DB
+
+alt Session Invalid
+    Session --> BookCtrl: sessionInvalid
+    BookCtrl --> User: redirectToLogin()
+    deactivate Session
+else Session Valid
+    Session --> BookCtrl: userId
+    deactivate Session
+    
+    BookCtrl -> Valid: validateBookingData(\nvisitDate, timeSlot,\nvisitorQuantity)
+    activate Valid
+    Valid -> Valid: checkDateFormat()
+    Valid -> Valid: checkDateInFuture()
+    Valid -> Valid: checkDateWithin90Days()
+    Valid -> Valid: checkQuantityRange()
+    Valid -> Valid: checkTimeSlotValid()
+    Valid --> BookCtrl: validationResult
+    deactivate Valid
+    
+    alt Data Invalid
+        BookCtrl --> User: displayValidationErrors(errors)
+    else Data Valid
+        par Check Capacity and Calculate Cost
+            BookCtrl -> Capacity: checkAvailability(\nvisitDate, timeSlot,\nvisitorQuantity)
+            activate Capacity
+            Capacity -> DB: SELECT * FROM capacity\nWHERE visit_date = ?\nAND time_slot = ?
+            activate DB
+            DB --> Capacity: capacityRecord
+            deactivate DB
+            Capacity -> Capacity: calculateAvailable(\nmaxCapacity - bookedCapacity)
+            Capacity --> BookCtrl: availabilityStatus
+            deactivate Capacity
+        and
+            BookCtrl -> BookModel: calculateTotalCost(\nvisitorQuantity, planId)
+            activate BookModel
+            BookModel -> DB: SELECT price FROM plans\nWHERE id = ?
+            activate DB
+            DB --> BookModel: planPrice
+            deactivate DB
+            BookModel -> BookModel: totalCost = \nvisitorQuantity * planPrice
+            BookModel --> BookCtrl: totalCost
+            deactivate BookModel
+        end
+        
+        alt Capacity Not Available
+            BookCtrl --> User: displayError(\n"السعة غير متاحة")
+        else Capacity Available
+            BookCtrl -> DB: BEGIN TRANSACTION
+            activate DB
+            
+            BookCtrl -> Capacity: reserveCapacity(\nvisitDate, timeSlot,\nvisitorQuantity)
+            activate Capacity
+            Capacity -> DB: UPDATE capacity\nSET booked_capacity =\nbooked_capacity + ?,\navailable_capacity =\navailable_capacity - ?\nWHERE visit_date = ?\nAND time_slot = ?
+            DB --> Capacity: success
+            deactivate Capacity
+            
+            BookCtrl -> BookModel: generateBookingReference()
+            activate BookModel
+            BookModel -> BookModel: generateUniqueCode(8)
+            BookModel --> BookCtrl: bookingReference
+            deactivate BookModel
+            
+            BookCtrl -> BookModel: createBooking(\nuserId, planId, visitDate,\ntimeSlot, visitorQuantity,\ntotalCost, bookingReference)
+            activate BookModel
+            BookModel -> DB: INSERT INTO bookings\n(user_id, plan_id,\nvisit_date, time_slot,\nvisitor_quantity, total_cost,\nbooking_reference,\nbooking_status)\nVALUES (?, ?, ?, ?, ?, ?,\n?, 'confirmed')
+            DB --> BookModel: bookingId
+            BookModel --> BookCtrl: bookingRecord
+            deactivate BookModel
+            
+            BookCtrl -> DB: COMMIT TRANSACTION
+            deactivate DB
+            
+            BookCtrl -> Email: sendBookingConfirmation(\nuserId, bookingRecord)
+            activate Email
+            Email -> DB: SELECT email FROM users\nWHERE id = ?
+            activate DB
+            DB --> Email: userEmail
+            deactivate DB
+            Email -> Email: composeConfirmationEmail(\nbookingReference,\nvisitDate, timeSlot,\ntotalCost)
+            Email -> Email: sendSMTP()
+            Email --> BookCtrl: emailSent
+            deactivate Email
+            
+            opt Payment Required
+                BookCtrl -> Payment: processPayment(\ntotalCost, bookingId)
+                activate Payment
+                Payment -> Payment: initiatePaymentGateway()
+                
+                alt Payment Successful
+                    Payment --> BookCtrl: paymentSuccess,\ntransactionId
+                    BookCtrl -> BookModel: updatePaymentStatus(\nbookingId, transactionId)
+                    activate BookModel
+                    BookModel -> DB: UPDATE bookings\nSET booking_status = 'paid',\npayment_transaction_id = ?\nWHERE id = ?
+                    activate DB
+                    deactivate DB
+                    deactivate BookModel
+                else Payment Failed
+                    Payment --> BookCtrl: paymentFailed
+                    BookCtrl -> DB: BEGIN TRANSACTION
+                    activate DB
+                    BookCtrl -> BookModel: deleteBooking(bookingId)
+                    activate BookModel
+                    BookModel -> DB: DELETE FROM bookings\nWHERE id = ?
+                    deactivate BookModel
+                    BookCtrl -> Capacity: releaseCapacity(\nvisitDate, timeSlot,\nvisitorQuantity)
+                    activate Capacity
+                    Capacity -> DB: UPDATE capacity\nSET booked_capacity =\nbooked_capacity - ?,\navailable_capacity =\navailable_capacity + ?
+                    deactivate Capacity
+                    BookCtrl -> DB: COMMIT TRANSACTION
+                    deactivate DB
+                    BookCtrl --> User: displayError(\n"فشلت عملية الدفع")
+                end
+                deactivate Payment
+            end
+            
+            BookCtrl --> User: displayBookingConfirmation(\nbookingReference,\nvisitDate, timeSlot,\ntotalCost)
+        end
+    end
+end
+
+deactivate BookCtrl
+
+@enduml
+
+@startuml Modify Booking Sequence
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title **Modify Booking Process\n(عملية تعديل حجز)**
+
+actor "User\n(زائر مسجل)" as User
+participant "Booking\nController" as BookCtrl
+participant "Booking\nModel" as BookModel
+participant "Capacity\nManager" as Capacity
+participant "Validator" as Valid
+participant "Database" as DB
+participant "Email\nService" as Email
+
+User -> BookCtrl: requestModifyBooking(\nbookingId)
+activate BookCtrl
+
+BookCtrl -> BookModel: getBookingById(bookingId)
+activate BookModel
+BookModel -> DB: SELECT * FROM bookings\nWHERE id = ?
+activate DB
+DB --> BookModel: bookingRecord
+deactivate DB
+BookModel --> BookCtrl: bookingRecord
+deactivate BookModel
+
+BookCtrl -> BookCtrl: verifyOwnership(\nuserId, booking.user_id)
+
+alt User Does Not Own Booking
+    BookCtrl --> User: displayError(\n"غير مصرح لك بتعديل\nهذا الحجز")
+else User Owns Booking
+    BookCtrl -> BookCtrl: checkModificationEligibility(\nbooking.visit_date)
+    
+    alt Visit Date <= 24 Hours
+        BookCtrl --> User: displayError(\n"لا يمكن التعديل قبل\n24 ساعة من الزيارة")
+    else Can Modify
+        BookCtrl --> User: displayModificationForm(\ncurrentBookingData)
+        
+        User -> BookCtrl: submitModification(\nnewVisitDate,\nnewTimeSlot,\nnewVisitorQuantity)
+        
+        BookCtrl -> Valid: validateNewData(\nnewVisitDate,\nnewTimeSlot,\nnewVisitorQuantity)
+        activate Valid
+        Valid --> BookCtrl: validationResult
+        deactivate Valid
+        
+        alt Data Invalid
+            BookCtrl --> User: displayValidationErrors(errors)
+        else Data Valid
+            BookCtrl -> Capacity: checkNewAvailability(\nnewVisitDate,\nnewTimeSlot,\nnewVisitorQuantity)
+            activate Capacity
+            Capacity -> DB: SELECT * FROM capacity\nWHERE visit_date = ?\nAND time_slot = ?
+            activate DB
+            DB --> Capacity: newCapacityRecord
+            deactivate DB
+            Capacity --> BookCtrl: newAvailabilityStatus
+            deactivate Capacity
+            
+            alt New Capacity Not Available
+                BookCtrl --> User: displayError(\n"السعة غير متاحة\nللتاريخ الجديد")
+            else New Capacity Available
+                BookCtrl -> DB: BEGIN TRANSACTION
+                activate DB
+                
+                BookCtrl -> Capacity: releaseOldCapacity(\nbooking.visit_date,\nbooking.time_slot,\nbooking.visitor_quantity)
+                activate Capacity
+                Capacity -> DB: UPDATE capacity\nSET booked_capacity =\nbooked_capacity - ?,\navailable_capacity =\navailable_capacity + ?\nWHERE visit_date = ?\nAND time_slot = ?
+                deactivate Capacity
+                
+                BookCtrl -> Capacity: reserveNewCapacity(\nnewVisitDate,\nnewTimeSlot,\nnewVisitorQuantity)
+                activate Capacity
+                Capacity -> DB: UPDATE capacity\nSET booked_capacity =\nbooked_capacity + ?,\navailable_capacity =\navailable_capacity - ?\nWHERE visit_date = ?\nAND time_slot = ?
+                deactivate Capacity
+                
+                BookCtrl -> BookModel: calculateNewCost(\nnewVisitorQuantity)
+                activate BookModel
+                BookModel --> BookCtrl: newTotalCost
+                deactivate BookModel
+                
+                BookCtrl -> BookModel: updateBooking(\nbookingId, newVisitDate,\nnewTimeSlot,\nnewVisitorQuantity,\nnewTotalCost)
+                activate BookModel
+                BookModel -> DB: UPDATE bookings\nSET visit_date = ?,\ntime_slot = ?,\nvisitor_quantity = ?,\ntotal_cost = ?,\nmodification_timestamp = NOW()\nWHERE id = ?
+                BookModel --> BookCtrl: success
+                deactivate BookModel
+                
+                BookCtrl -> DB: COMMIT TRANSACTION
+                deactivate DB
+                
+                BookCtrl -> Email: sendModificationEmail(\nuserId, updatedBooking)
+                activate Email
+                Email -> DB: SELECT email FROM users\nWHERE id = ?
+                activate DB
+                DB --> Email: userEmail
+                deactivate DB
+                Email -> Email: composeModificationEmail(\nupdatedDetails)
+                Email -> Email: sendSMTP()
+                Email --> BookCtrl: emailSent
+                deactivate Email
+                
+                BookCtrl --> User: displaySuccess(\n"تم تعديل الحجز بنجاح")
+            end
+        end
+    end
+end
+
+deactivate BookCtrl
+
+@enduml
+
+@startuml Cancel Booking Sequence
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title **Cancel Booking Process\n(عملية إلغاء حجز)**
+
+actor "User\n(زائر مسجل)" as User
+participant "Booking\nController" as BookCtrl
+participant "Booking\nModel" as BookModel
+participant "Capacity\nManager" as Capacity
+participant "Database" as DB
+participant "Payment\nGateway" as Payment
+participant "Email\nService" as Email
+participant "Audit\nLogger" as Logger
+
+User -> BookCtrl: requestCancelBooking(\nbookingId)
+activate BookCtrl
+
+BookCtrl -> BookModel: getBookingById(bookingId)
+activate BookModel
+BookModel -> DB: SELECT * FROM bookings\nWHERE id = ?
+activate DB
+DB --> BookModel: bookingRecord
+deactivate DB
+BookModel --> BookCtrl: bookingRecord
+deactivate BookModel
+
+BookCtrl -> BookCtrl: verifyOwnership(\nuserId, booking.user_id)
+
+alt User Does Not Own Booking
+    BookCtrl --> User: displayError(\n"غير مصرح لك بإلغاء\nهذا الحجز")
+else User Owns Booking
+    BookCtrl -> BookCtrl: checkCancellationPolicy(\nbooking.visit_date)
+    
+    alt Visit Date <= 48 Hours
+        BookCtrl --> User: displayPolicyError(\n"لا يمكن الإلغاء قبل\n48 ساعة من الزيارة")
+        BookCtrl --> User: suggestContactSupport()
+    else Can Cancel
+        BookCtrl --> User: displayCancellationConfirmation(\n"هل أنت متأكد\nمن الإلغاء؟")
+        
+        User -> BookCtrl: confirmCancellation()
+        
+        BookCtrl -> DB: BEGIN TRANSACTION
+        activate DB
+        
+        BookCtrl -> BookModel: updateBookingStatus(\nbookingId, 'cancelled')
+        activate BookModel
+        BookModel -> DB: UPDATE bookings\nSET booking_status = 'cancelled',\nmodification_timestamp = NOW()\nWHERE id = ?
+        BookModel --> BookCtrl: success
+        deactivate BookModel
+        
+        BookCtrl -> Capacity: releaseCapacity(\nbooking.visit_date,\nbooking.time_slot,\nbooking.visitor_quantity)
+        activate Capacity
+        Capacity -> DB: UPDATE capacity\nSET booked_capacity =\nbooked_capacity - ?,\navailable_capacity =\navailable_capacity + ?\nWHERE visit_date = ?\nAND time_slot = ?
+        Capacity --> BookCtrl: capacityReleased
+        deactivate Capacity
+        
+        BookCtrl -> Logger: logCancellation(\nuserId, bookingId)
+        activate Logger
+        Logger -> DB: INSERT INTO audit_logs\n(user_id, action,\nentity_type, entity_id)\nVALUES (?, 'cancel_booking',\n'booking', ?)
+        deactivate Logger
+        
+        BookCtrl -> DB: COMMIT TRANSACTION
+        deactivate DB
+        
+        opt Payment Was Made
+            BookCtrl -> BookCtrl: checkPaymentStatus(\nbooking.booking_status)
+            
+            alt Payment Made
+                BookCtrl -> Payment: processRefund(\nbooking.total_cost,\nbooking.payment_transaction_id)
+                activate Payment
+                Payment -> Payment: initiateRefund()
+                
+                alt Refund Successful
+                    Payment --> BookCtrl: refundSuccess,\nrefundTransactionId
+                    BookCtrl -> BookModel: updatePaymentStatus(\nbookingId,\nrefundTransactionId)
+                    activate BookModel
+                    BookModel -> DB: UPDATE bookings\nSET booking_status = 'refunded',\nrefund_transaction_id = ?\nWHERE id = ?
+                    activate DB
+                    deactivate DB
+                    deactivate BookModel
+                else Refund Failed
+                    Payment --> BookCtrl: refundFailed
+                    BookCtrl -> Logger: logRefundFailure(\nbookingId)
+                    activate Logger
+                    Logger -> DB: INSERT INTO audit_logs
+                    activate DB
+                    deactivate DB
+                    deactivate Logger
+                    BookCtrl -> BookCtrl: createManualReviewTask()
+                end
+                deactivate Payment
+            end
+        end
+        
+        BookCtrl -> Email: sendCancellationEmail(\nuserId, bookingRecord)
+        activate Email
+        Email -> DB: SELECT email FROM users\nWHERE id = ?
+        activate DB
+        DB --> Email: userEmail
+        deactivate DB
+        Email -> Email: composeCancellationEmail(\nbookingReference,\ncancellationDate)
+        Email -> Email: sendSMTP()
+        Email --> BookCtrl: emailSent
+        deactivate Email
+        
+        BookCtrl --> User: displaySuccess(\n"تم إلغاء الحجز بنجاح")
+    end
+end
+
+deactivate BookCtrl
+
+@enduml
+
+@startuml Password Reset Sequence
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title **Password Reset Process\n(عملية استعادة كلمة المرور)**
+
+actor "User\n(مستخدم)" as User
+participant "Auth\nController" as AuthCtrl
+participant "User\nModel" as UserModel
+participant "Token\nGenerator" as Token
+participant "Database" as DB
+participant "Email\nService" as Email
+participant "Security" as Sec
+participant "Session\nManager" as Session
+participant "Audit\nLogger" as Logger
+
+== Request Password Reset ==
+
+User -> AuthCtrl: requestPasswordReset(email)
+activate AuthCtrl
+
+AuthCtrl -> UserModel: findUserByEmail(email)
+activate UserModel
+UserModel -> DB: SELECT * FROM users\nWHERE email = ?
+activate DB
+DB --> UserModel: userRecord
+deactivate DB
+
+alt User Exists
+    UserModel --> AuthCtrl: userId
+    deactivate UserModel
+    
+    AuthCtrl -> Token: generateResetToken(userId)
+    activate Token
+    Token -> Token: generateSecureToken(32)
+    Token -> DB: INSERT INTO\npassword_reset_tokens\n(user_id, token,\nexpiration_timestamp)\nVALUES (?, ?, NOW() + 1 HOUR)
+    activate DB
+    DB --> Token: success
+    deactivate DB
+    Token --> AuthCtrl: resetToken
+    deactivate Token
+    
+    AuthCtrl -> Email: sendPasswordResetEmail(\nemail, resetToken)
+    activate Email
+    Email -> Email: buildResetLink(token)
+    Email -> Email: composeResetEmail(\nsubject, body, link)
+    Email -> Email: sendSMTP()
+    Email --> AuthCtrl: emailSent
+    deactivate Email
+else User Not Found
+    UserModel --> AuthCtrl: userNotFound
+    deactivate UserModel
+    note right: لا نكشف عدم وجود\nالبريد لحماية الخصوصية
+end
+
+AuthCtrl --> User: displayGenericMessage(\n"إذا كان البريد مسجلاً،\nستتلقى رابط الاستعادة")
+
+deactivate AuthCtrl
+
+== Verify Reset Token ==
+
+User -> AuthCtrl: clickResetLink(token)
+activate AuthCtrl
+
+AuthCtrl -> Token: validateResetToken(token)
+activate Token
+Token -> DB: SELECT * FROM\npassword_reset_tokens\nWHERE token = ?\nAND is_used = false
+activate DB
+DB --> Token: tokenRecord
+deactivate DB
+
+alt Token Not Found
+    Token --> AuthCtrl: tokenInvalid
+    AuthCtrl --> User: displayError(\n"رابط غير صحيح")
+else Token Found
+    Token -> Token: checkExpiration(\ntokenRecord.expiration_timestamp)
+    
+    alt Token Expired
+        Token --> AuthCtrl: tokenExpired
+        AuthCtrl --> User: displayError(\n"انتهت صلاحية الرمز")
+    else Token Valid
+        Token --> AuthCtrl: tokenValid, userId
+        deactivate Token
+        AuthCtrl --> User: displayNewPasswordForm()
+    end
+end
+
+deactivate AuthCtrl
+
+== Submit New Password ==
+
+User -> AuthCtrl: submitNewPassword(\ntoken, newPassword,\nconfirmPassword)
+activate AuthCtrl
+
+AuthCtrl -> AuthCtrl: validatePasswordRequirements(\nnewPassword)
+
+alt Password Invalid
+    AuthCtrl --> User: displayPasswordRequirements(\n"Min 8 chars, uppercase,\nlowercase, number, special")
+else Password Valid
+    AuthCtrl -> AuthCtrl: checkPasswordsMatch(\nnewPassword, confirmPassword)
+    
+    alt Passwords Don't Match
+        AuthCtrl --> User: displayError(\n"كلمات المرور\nغير متطابقة")
+    else Passwords Match
+        AuthCtrl -> Sec: hashPassword(newPassword)
+        activate Sec
+        Sec -> Sec: bcrypt(newPassword, salt)
+        Sec --> AuthCtrl: passwordHash
+        deactivate Sec
+        
+        AuthCtrl -> UserModel: updatePassword(\nuserId, passwordHash)
+        activate UserModel
+        UserModel -> DB: UPDATE users\nSET password_hash = ?\nWHERE id = ?
+        activate DB
+        DB --> UserModel: success
+        deactivate DB
+        UserModel --> AuthCtrl: passwordUpdated
+        deactivate UserModel
+        
+        AuthCtrl -> Token: invalidateResetToken(token)
+        activate Token
+        Token -> DB: UPDATE\npassword_reset_tokens\nSET is_used = true\nWHERE token = ?
+        activate DB
+        deactivate DB
+        deactivate Token
+        
+        AuthCtrl -> Session: invalidateAllUserSessions(\nuserId)
+        activate Session
+        Session -> DB: DELETE FROM sessions\nWHERE user_id = ?
+        activate DB
+        DB --> Session: success
+        deactivate DB
+        deactivate Session
+        
+        AuthCtrl -> Logger: logSecurityEvent(\nuserId, 'password_reset')
+        activate Logger
+        Logger -> DB: INSERT INTO audit_logs\n(user_id, action)\nVALUES (?, 'password_reset')
+        activate DB
+        deactivate DB
+        deactivate Logger
+        
+        AuthCtrl -> Email: sendConfirmationEmail(\nuserId)
+        activate Email
+        Email -> DB: SELECT email FROM users\nWHERE id = ?
+        activate DB
+        DB --> Email: userEmail
+        deactivate DB
+        Email -> Email: composeConfirmationEmail()
+        Email -> Email: sendSMTP()
+        Email --> AuthCtrl: emailSent
+        deactivate Email
+        
+        AuthCtrl --> User: displaySuccess(\n"تم تغيير كلمة المرور")
+        AuthCtrl --> User: redirectToLogin()
+    end
+end
+
+deactivate AuthCtrl
+
+@enduml
+
+@startuml Admin Manage Content Sequence
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title **Admin Content Management Process\n(عملية إدارة المحتوى - المسؤول)**
+
+actor "Admin\n(مسؤول)" as Admin
+participant "Admin\nController" as AdminCtrl
+participant "Session\nManager" as Session
+participant "Content\nModel" as ContentModel
+participant "Validator" as Valid
+participant "File\nUploader" as FileUpload
+participant "Database" as DB
+participant "Audit\nLogger" as Logger
+
+== Verify Admin Access ==
+
+Admin -> AdminCtrl: accessAdminDashboard()
+activate AdminCtrl
+
+AdminCtrl -> Session: validateSession()
+activate Session
+Session -> DB: SELECT * FROM sessions\nWHERE session_id = ?
+activate DB
+DB --> Session: sessionData
+deactivate DB
+Session --> AdminCtrl: userId
+deactivate Session
+
+AdminCtrl -> AdminCtrl: checkAdminRole(userId)
+
+alt Not Admin
+    AdminCtrl --> Admin: displayAuthorizationError(\n"ليس لديك صلاحيات\nالمسؤول")
+    AdminCtrl --> Admin: redirectToHome()
+else Is Admin
+    AdminCtrl --> Admin: displayAdminDashboard()
+    
+    == Create Content ==
+    
+    Admin -> AdminCtrl: createContent(\ncontentType, contentData)
+    
+    AdminCtrl -> Valid: validateContentData(\ncontentData)
+    activate Valid
+    Valid -> Valid: checkRequiredFields()
+    Valid -> Valid: validateDataTypes()
+    Valid --> AdminCtrl: validationResult
+    deactivate Valid
+    
+    alt Data Invalid
+        AdminCtrl --> Admin: displayValidationErrors(errors)
+    else Data Valid
+        opt File Upload
+            Admin -> AdminCtrl: uploadFile(file)
+            AdminCtrl -> FileUpload: validateFile(file)
+            activate FileUpload
+            FileUpload -> FileUpload: checkFileType()
+            FileUpload -> FileUpload: checkFileSize(< 5MB)
+            FileUpload -> FileUpload: checkExtension()
+            
+            alt File Invalid
+                FileUpload --> AdminCtrl: fileInvalid
+                AdminCtrl --> Admin: displayFileError()
+            else File Valid
+                FileUpload -> FileUpload: generateUniqueFilename()
+                FileUpload -> FileUpload: moveUploadedFile(\noutside web root)
+                FileUpload --> AdminCtrl: filePath
+                deactivate FileUpload
+            end
+        end
+        
+        AdminCtrl -> ContentModel: createContent(\ncontentType, contentData,\nfilePath)
+        activate ContentModel
+        ContentModel -> DB: INSERT INTO {contentType}\n(title, description, ...,\nstatus)\nVALUES (?, ?, ..., 'active')
+        activate DB
+        DB --> ContentModel: contentId
+        deactivate DB
+        ContentModel --> AdminCtrl: newContent
+        deactivate ContentModel
+        
+        AdminCtrl -> Logger: logAdminAction(\nadminId, 'create_content',\ncontentType, contentId)
+        activate Logger
+        Logger -> DB: INSERT INTO audit_logs\n(user_id, action,\nentity_type, entity_id)\nVALUES (?, 'create', ?, ?)
+        activate DB
+        deactivate DB
+        deactivate Logger
+        
+        AdminCtrl --> Admin: displaySuccess(\n"تم إنشاء المحتوى بنجاح")
+    end
+    
+    == Update Content ==
+    
+    Admin -> AdminCtrl: updateContent(\ncontentId, updatedData)
+    
+    AdminCtrl -> ContentModel: getContentById(\ncontentId)
+    activate ContentModel
+    ContentModel -> DB: SELECT * FROM {contentType}\nWHERE id = ?
+    activate DB
+    DB --> ContentModel: contentRecord
+    deactivate DB
+    ContentModel --> AdminCtrl: currentContent
+    deactivate ContentModel
+    
+    AdminCtrl -> Valid: validateUpdatedData(\nupdatedData)
+    activate Valid
+    Valid --> AdminCtrl: validationResult
+    deactivate Valid
+    
+    alt Data Invalid
+        AdminCtrl --> Admin: displayValidationErrors(errors)
+    else Data Valid
+        AdminCtrl -> ContentModel: updateContent(\ncontentId, updatedData)
+        activate ContentModel
+        ContentModel -> DB: UPDATE {contentType}\nSET title = ?, description = ?,\n...,\nmodification_timestamp = NOW()\nWHERE id = ?
+        activate DB
+        DB --> ContentModel: success
+        deactivate DB
+        ContentModel --> AdminCtrl: updatedContent
+        deactivate ContentModel
+        
+        AdminCtrl -> Logger: logAdminAction(\nadminId, 'update_content',\ncontentId, changes)
+        activate Logger
+        Logger -> DB: INSERT INTO audit_logs
+        activate DB
+        deactivate DB
+        deactivate Logger
+        
+        AdminCtrl --> Admin: displaySuccess(\n"تم تحديث المحتوى بنجاح")
+    end
+    
+    == Delete Content ==
+    
+    Admin -> AdminCtrl: deleteContent(\ncontentId)
+    
+    AdminCtrl -> ContentModel: checkDependencies(\ncontentId)
+    activate ContentModel
+    ContentModel -> DB: SELECT COUNT(*)\nFROM bookings\nWHERE plan_id = ?
+    activate DB
+    DB --> ContentModel: dependencyCount
+    deactivate DB
+    ContentModel --> AdminCtrl: hasDependencies
+    deactivate ContentModel
+    
+    alt Has Dependencies
+        AdminCtrl --> Admin: displayWarning(\n"المحتوى مرتبط بحجوزات")
+        Admin -> AdminCtrl: confirmSoftDelete()
+        
+        AdminCtrl -> ContentModel: softDeleteContent(\ncontentId)
+        activate ContentModel
+        ContentModel -> DB: UPDATE {contentType}\nSET status = 'inactive'\nWHERE id = ?
+        activate DB
+        DB --> ContentModel: success
+        deactivate DB
+        ContentModel --> AdminCtrl: softDeleted
+        deactivate ContentModel
+        
+        AdminCtrl -> Logger: logAdminAction(\nadminId, 'soft_delete',\ncontentId)
+        activate Logger
+        Logger -> DB: INSERT INTO audit_logs
+        activate DB
+        deactivate DB
+        deactivate Logger
+        
+        AdminCtrl --> Admin: displaySuccess(\n"تم تعطيل المحتوى")
+    else No Dependencies
+        AdminCtrl --> Admin: displayConfirmation(\n"هل أنت متأكد؟")
+        Admin -> AdminCtrl: confirmHardDelete()
+        
+        AdminCtrl -> ContentModel: deleteContent(\ncontentId)
+        activate ContentModel
+        ContentModel -> DB: DELETE FROM {contentType}\nWHERE id = ?
+        activate DB
+        DB --> ContentModel: success
+        deactivate DB
+        
+        ContentModel -> FileUpload: deleteAssociatedFiles(\ncontentId)
+        activate FileUpload
+        FileUpload -> FileUpload: removeFiles()
+        FileUpload --> ContentModel: filesDeleted
+        deactivate FileUpload
+        
+        ContentModel --> AdminCtrl: deleted
+        deactivate ContentModel
+        
+        AdminCtrl -> Logger: logAdminAction(\nadminId, 'hard_delete',\ncontentId)
+        activate Logger
+        Logger -> DB: INSERT INTO audit_logs
+        activate DB
+        deactivate DB
+        deactivate Logger
+        
+        AdminCtrl --> Admin: displaySuccess(\n"تم حذف المحتوى نهائياً")
+    end
+end
+
+deactivate AdminCtrl
+
+@enduml
+
+@startuml Browse and View Plans Sequence
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title **Browse and View Museum Plans\n(تصفح وعرض خطط المتحف)**
+
+actor "User\n(زائر)" as User
+participant "Plan\nController" as PlanCtrl
+participant "Plan\nModel" as PlanModel
+participant "Cache" as Cache
+participant "Database" as DB
+participant "Session\nManager" as Session
+
+User -> PlanCtrl: browsePlans()
+activate PlanCtrl
+
+PlanCtrl -> Cache: getCachedPlans()
+activate Cache
+
+alt Cache Hit
+    Cache --> PlanCtrl: cachedPlans
+    deactivate Cache
+else Cache Miss
+    deactivate Cache
+    PlanCtrl -> PlanModel: getAllActivePlans()
+    activate PlanModel
+    PlanModel -> DB: SELECT * FROM plans\nWHERE status = 'active'\nORDER BY creation_timestamp DESC
+    activate DB
+    DB --> PlanModel: planRecords
+    deactivate DB
+    PlanModel --> PlanCtrl: activePlans
+    deactivate PlanModel
+    
+    PlanCtrl -> Cache: storePlans(activePlans)
+    activate Cache
+    Cache -> Cache: set('plans', activePlans, 3600)
+    deactivate Cache
+end
+
+PlanCtrl --> User: displayPlansGrid(\nthumbnails, titles, durations)
+
+opt Apply Filters
+    User -> PlanCtrl: applyFilters(\nduration, difficulty,\ntargetAudience)
+    PlanCtrl -> PlanModel: filterPlans(\nfilterCriteria)
+    activate PlanModel
+    PlanModel -> PlanModel: applyFilters(\nfilterCriteria)
+    PlanModel --> PlanCtrl: filteredPlans
+    deactivate PlanModel
+    PlanCtrl --> User: displayFilteredPlans()
+end
+
+opt Apply Sorting
+    User -> PlanCtrl: applySorting(sortBy, order)
+    PlanCtrl -> PlanModel: sortPlans(sortBy, order)
+    activate PlanModel
+    PlanModel -> PlanModel: sortData()
+    PlanModel --> PlanCtrl: sortedPlans
+    deactivate PlanModel
+    PlanCtrl --> User: displaySortedPlans()
+end
+
+User -> PlanCtrl: selectPlan(planId)
+
+PlanCtrl -> PlanModel: getPlanById(planId)
+activate PlanModel
+PlanModel -> DB: SELECT * FROM plans\nWHERE id = ?
+activate DB
+DB --> PlanModel: planDetails
+deactivate DB
+PlanModel --> PlanCtrl: fullPlanDetails
+deactivate PlanModel
+
+PlanCtrl -> Session: checkUserAuthentication()
+activate Session
+Session -> DB: SELECT * FROM sessions\nWHERE session_id = ?
+activate DB
+DB --> Session: sessionData
+deactivate DB
+
+alt User Authenticated
+    Session --> PlanCtrl: authenticated, userId
+    deactivate Session
+    PlanCtrl --> User: displayPlanDetails(\nfullDescription, itinerary,\nfeatures, "احجز الآن" button)
+else User Not Authenticated
+    Session --> PlanCtrl: notAuthenticated
+    deactivate Session
+    PlanCtrl --> User: displayPlanDetails(\nfullDescription, itinerary,\nfeatures, "سجل دخول للحجز"\nmessage)
+end
+
+deactivate PlanCtrl
+
+@enduml
+
+@startuml View Booking History Sequence
+
+skinparam sequenceMessageAlign center
+skinparam responseMessageBelowArrow true
+
+title **View Booking History\n(عرض سجل الحجوزات)**
+
+actor "User\n(زائر مسجل)" as User
+participant "Booking\nController" as BookCtrl
+participant "Session\nManager" as Session
+participant "Booking\nModel" as BookModel
+participant "Plan\nModel" as PlanModel
+participant "Database" as DB
+
+User -> BookCtrl: viewBookingHistory()
+activate BookCtrl
+
+BookCtrl -> Session: validateUserSession()
+activate Session
+Session -> DB: SELECT * FROM sessions\nWHERE session_id = ?
+activate DB
+DB --> Session: sessionData
+deactivate DB
+
+alt Session Invalid
+    Session --> BookCtrl: sessionInvalid
+    BookCtrl --> User: redirectToLogin()
+else Session Valid
+    Session --> BookCtrl: userId
+    deactivate Session
+    
+    BookCtrl -> BookModel: getBookingsByUserId(userId)
+    activate BookModel
+    BookModel -> DB: SELECT b.*, p.title as plan_title\nFROM bookings b\nLEFT JOIN plans p ON b.plan_id = p.id\nWHERE b.user_id = ?\nORDER BY b.creation_timestamp DESC
+    activate DB
+    DB --> BookModel: bookingRecords
+    deactivate DB
+    
+    BookModel -> BookModel: categorizeBookings(\nbookingRecords)
+    note right
+      تصنيف الحجوزات إلى:
+      - القادمة (Upcoming)
+      - السابقة (Past)
+      - الملغاة (Cancelled)
+    end note
+    
+    BookModel --> BookCtrl: categorizedBookings
+    deactivate BookModel
+    
+    BookCtrl --> User: displayBookingHistory(\nupcoming, past, cancelled)
+    
+    opt View Booking Details
+        User -> BookCtrl: viewBookingDetails(\nbookingId)
+        
+        BookCtrl -> BookModel: getBookingById(bookingId)
+        activate BookModel
+        BookModel -> DB: SELECT * FROM bookings\nWHERE id = ?\nAND user_id = ?
+        activate DB
+        DB --> BookModel: bookingDetails
+        deactivate DB
+        BookModel --> BookCtrl: fullBookingDetails
+        deactivate BookModel
+        
+        BookCtrl -> PlanModel: getPlanDetails(\nbooking.plan_id)
+        activate PlanModel
+        PlanModel -> DB: SELECT * FROM plans\nWHERE id = ?
+        activate DB
+        DB --> PlanModel: planDetails
+        deactivate DB
+        PlanModel --> BookCtrl: planInfo
+        deactivate PlanModel
+        
+        BookCtrl --> User: displayBookingDetails(\nbookingReference,\nvisitDate, timeSlot,\nvisitorQuantity, totalCost,\nbookingStatus, planInfo)
+    end
+end
+
+deactivate BookCtrl
+
+@enduml

@@ -1,0 +1,317 @@
+
+      <html xmlns:o='urn:schemas-microsoft-com:office:office'
+            xmlns:w='urn:schemas-microsoft-com:office:word'
+            xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+          <meta charset="utf-8">
+          <title>Exported Document</title>
+          <style>
+              body { font-family: Arial, sans-serif; }
+          </style>
+      </head>
+      <body>
+          <h1 id="functionalrequirements">Functional Requirements</h1>
+<h2 id="grandegyptianmuseumwebapplication">Grand Egyptian Museum Web Application</h2>
+<hr />
+<h2 id="1homepagemodule">1. Home Page Module</h2>
+<p><strong>FR-1:</strong> The system shall display a landing page containing museum overview, featured exhibitions, upcoming events, and calls-to-action for ticket booking.</p>
+<p><strong>FR-2:</strong> The system shall provide navigation menu on the home page allowing access to all primary sections including Plans, Events, Food &amp; Dining, Collections, Kids Zone, and Donations.</p>
+<p><strong>FR-3:</strong> The system shall display hero banner showcasing current featured exhibition or promotional content with high-resolution imagery.</p>
+<p><strong>FR-4:</strong> The system shall present quick access buttons for frequently used functions including "Book Tickets," "View Events," and "Explore Plans."</p>
+<p><strong>FR-5:</strong> The system shall display museum operating hours, location information, and contact details in the footer section.</p>
+<p><strong>FR-6:</strong> The system shall provide search functionality allowing users to search across plans, events, collections, and general content.</p>
+<p><strong>FR-7:</strong> The system shall display visitor testimonials or featured reviews on the home page.</p>
+<p><strong>FR-8:</strong> The system shall show announcements or important notices regarding special closures, policy changes, or featured programs.</p>
+<hr />
+<h2 id="2planssystemmodule">2. Plans System Module</h2>
+<p><strong>FR-9:</strong> The system shall display a listing of all active museum visit plans with summary information including title, duration, and target audience.</p>
+<p><strong>FR-10:</strong> The system shall allow users to filter plans by duration (short, medium, long), difficulty level (easy, moderate, challenging), and target audience (families, students, seniors, general).</p>
+<p><strong>FR-11:</strong> The system shall allow users to sort plans alphabetically by title, by duration (ascending/descending), or by popularity.</p>
+<p><strong>FR-12:</strong> The system shall display each plan in card format showing plan title, brief description (maximum 150 characters), estimated duration, difficulty indicator, and thumbnail image.</p>
+<p><strong>FR-13:</strong> The system shall provide detailed plan view displaying complete description, comprehensive itinerary with stop-by-stop details, accessibility information, recommendations, and associated media.</p>
+<p><strong>FR-14:</strong> The system shall display related events or exhibitions associated with each plan when available.</p>
+<p><strong>FR-15:</strong> The system shall allow authenticated users to select a plan when creating a booking and associate the plan with their reservation.</p>
+<p><strong>FR-16:</strong> The system shall allow administrative users to create new plans by providing title, detailed description, duration, difficulty level, target audience, itinerary details, accessibility features, and images.</p>
+<p><strong>FR-17:</strong> The system shall allow administrative users to update existing plan information including all editable fields.</p>
+<p><strong>FR-18:</strong> The system shall allow administrative users to deactivate plans using soft deletion, marking them as inactive while preserving historical data.</p>
+<p><strong>FR-19:</strong> The system shall validate plan creation and updates ensuring required fields are populated, duration is positive integer, and description meets minimum length of 50 characters.</p>
+<p><strong>FR-20:</strong> The system shall display plan capacity recommendations indicating optimal group sizes for each plan type.</p>
+<hr />
+<h2 id="3ticketbookingmodule">3. Ticket Booking Module</h2>
+<p><strong>FR-21:</strong> The system shall restrict ticket booking functionality to authenticated users only, redirecting anonymous users to login page.</p>
+<p><strong>FR-22:</strong> The system shall display booking form requesting visit date, time slot, number of visitors, visitor age categories (adults, children, seniors), and optional plan selection.</p>
+<p><strong>FR-23:</strong> The system shall validate booking date ensuring selected date is future date within configured advance booking window (default 90 days).</p>
+<p><strong>FR-24:</strong> The system shall display available time slots for selected date showing capacity status (Available, Limited, Sold Out).</p>
+<p><strong>FR-25:</strong> The system shall validate visitor quantity ensuring it does not exceed maximum group size limit (configurable, default 10 visitors).</p>
+<p><strong>FR-26:</strong> The system shall check real-time capacity availability for selected date and time slot before accepting booking.</p>
+<p><strong>FR-27:</strong> The system shall calculate total booking cost by multiplying visitor quantity by applicable ticket prices based on age categories.</p>
+<p><strong>FR-28:</strong> The system shall display booking cost breakdown showing per-ticket price, quantity, applicable discounts, and total amount.</p>
+<p><strong>FR-29:</strong> The system shall generate unique alphanumeric booking reference code (minimum 8 characters) upon successful booking creation.</p>
+<p><strong>FR-30:</strong> The system shall create booking record with status "Confirmed" upon successful submission and capacity reservation.</p>
+<p><strong>FR-31:</strong> The system shall send automated confirmation email to user's registered email address containing booking reference, visit date/time, visitor details, and total cost.</p>
+<p><strong>FR-32:</strong> The system shall display user's complete booking history segregated into Upcoming Bookings, Past Bookings, and Cancelled Bookings.</p>
+<p><strong>FR-33:</strong> The system shall allow users to view detailed information for each booking including reference number, visit date, time slot, visitor count, associated plan, booking status, and creation date.</p>
+<p><strong>FR-34:</strong> The system shall allow users to modify upcoming bookings scheduled at least 24 hours in future (configurable threshold).</p>
+<p><strong>FR-35:</strong> The system shall allow users to change visit date, time slot, or visitor quantity for eligible bookings, subject to availability.</p>
+<p><strong>FR-36:</strong> The system shall recalculate booking cost when modifications affect visitor quantity or applicable pricing.</p>
+<p><strong>FR-37:</strong> The system shall send modification confirmation email when booking is successfully updated.</p>
+<p><strong>FR-38:</strong> The system shall allow users to cancel bookings scheduled at least 48 hours in future (configurable threshold).</p>
+<p><strong>FR-39:</strong> The system shall display cancellation policy and confirmation dialog before processing cancellation request.</p>
+<p><strong>FR-40:</strong> The system shall update booking status to "Cancelled" and release reserved capacity back to inventory upon cancellation.</p>
+<p><strong>FR-41:</strong> The system shall send cancellation confirmation email when booking is successfully cancelled.</p>
+<p><strong>FR-42:</strong> The system shall prevent modification or cancellation of bookings outside policy-defined timeframes, displaying appropriate error message.</p>
+<p><strong>FR-43:</strong> The system shall implement database transactions ensuring atomicity of capacity checks and booking creation to prevent overbooking.</p>
+<p><strong>FR-44:</strong> The system shall maintain daily capacity limits preventing total confirmed bookings from exceeding configured maximum.</p>
+<p><strong>FR-45:</strong> The system shall support multiple time slots per day with independent capacity limits for each slot.</p>
+<p><strong>FR-46:</strong> The system shall allow administrative users to view all system bookings with filtering by date range, status, and user.</p>
+<p><strong>FR-47:</strong> The system shall allow administrative users to modify any booking with override capability, bypassing standard policy restrictions.</p>
+<p><strong>FR-48:</strong> The system shall require administrative users to provide reason annotation when overriding booking policies.</p>
+<p><strong>FR-49:</strong> The system shall maintain audit log recording all booking modifications including timestamp, user identifier, action performed, and reason (for administrative actions).</p>
+<p><strong>FR-50:</strong> The system shall allow administrative users to manually create bookings on behalf of visitors.</p>
+<hr />
+<h2 id="4eventssystemmodule">4. Events System Module</h2>
+<p><strong>FR-51:</strong> The system shall display listing of all active events with end date equal to or after current date.</p>
+<p><strong>FR-52:</strong> The system shall categorize events as "Current" (start date ≤ current date ≤ end date) or "Upcoming" (start date &gt; current date).</p>
+<p><strong>FR-53:</strong> The system shall display events in card format showing event title, event type, date range, time, location, and thumbnail image.</p>
+<p><strong>FR-54:</strong> The system shall allow users to filter events by event type (Exhibition, Workshop, Lecture, Performance, Special Program).</p>
+<p><strong>FR-55:</strong> The system shall allow users to filter events by date range (This Week, This Month, Custom Date Range).</p>
+<p><strong>FR-56:</strong> The system shall allow users to filter events by registration requirement (Registration Required, Free Entry, No Registration).</p>
+<p><strong>FR-57:</strong> The system shall sort events chronologically by start date in ascending order by default.</p>
+<p><strong>FR-58:</strong> The system shall provide detailed event view displaying complete description, full schedule, location details, capacity information, registration requirements, pricing (if applicable), and multimedia content.</p>
+<p><strong>FR-59:</strong> The system shall display event capacity and current registration count when event requires registration.</p>
+<p><strong>FR-60:</strong> The system shall indicate event registration status (Open, Closed, Full, Waitlist Available).</p>
+<p><strong>FR-61:</strong> The system shall allow authenticated users to register for events requiring registration, subject to capacity availability.</p>
+<p><strong>FR-62:</strong> The system shall send event registration confirmation email upon successful registration.</p>
+<p><strong>FR-63:</strong> The system shall display related events or exhibitions associated with current event when available.</p>
+<p><strong>FR-64:</strong> The system shall allow administrative users to create events by providing title, description, event type, start date, end date, start time, end time, location, capacity limit, registration requirement flag, pricing information, and images.</p>
+<p><strong>FR-65:</strong> The system shall allow administrative users to update existing event information including all editable fields.</p>
+<p><strong>FR-66:</strong> The system shall allow administrative users to deactivate events using soft deletion.</p>
+<p><strong>FR-67:</strong> The system shall validate event date ranges ensuring end date is equal to or after start date and end time is after start time.</p>
+<p><strong>FR-68:</strong> The system shall automatically archive events with end date in the past, removing them from public listing while preserving data.</p>
+<p><strong>FR-69:</strong> The system shall send reminder emails to registered users 48 hours before event start time (configurable).</p>
+<p><strong>FR-70:</strong> The system shall support recurring event patterns with configurable frequency (daily, weekly, monthly) and end condition.</p>
+<hr />
+<h2 id="5fooddiningmodule">5. Food &amp; Dining Module</h2>
+<p><strong>FR-71:</strong> The system shall display listing of all active food and dining facilities within museum premises.</p>
+<p><strong>FR-72:</strong> The system shall display facilities in card format showing facility name, cuisine type, service style, price range indicator, and thumbnail image.</p>
+<p><strong>FR-73:</strong> The system shall allow users to filter facilities by cuisine type (Egyptian, Mediterranean, International, Fast Food, Café/Bakery, Snacks).</p>
+<p><strong>FR-74:</strong> The system shall allow users to filter facilities by price range (Budget, Moderate, Premium).</p>
+<p><strong>FR-75:</strong> The system shall allow users to filter facilities by dietary accommodations (Vegetarian, Vegan, Halal, Gluten-Free, Allergen-Free).</p>
+<p><strong>FR-76:</strong> The system shall allow users to filter facilities by service style (Full Service Restaurant, Café, Quick Service, Kiosk).</p>
+<p><strong>FR-77:</strong> The system shall provide detailed facility view displaying complete description, menu highlights, detailed operating hours by day of week, location information, seating capacity, amenities, dietary accommodations, and contact information.</p>
+<p><strong>FR-78:</strong> The system shall indicate current operating status (Open, Closed, Opening Soon, Closing Soon) based on real-time comparison with configured operating hours.</p>
+<p><strong>FR-79:</strong> The system shall display facility location on interactive museum map when available.</p>
+<p><strong>FR-80:</strong> The system shall display customer ratings and reviews for dining facilities when available.</p>
+<p><strong>FR-81:</strong> The system shall allow administrative users to create dining facilities by providing name, description, cuisine type, service style, menu highlights, operating hours, location, capacity, price range, dietary accommodations, amenities, and images.</p>
+<p><strong>FR-82:</strong> The system shall allow administrative users to update facility information including all editable fields.</p>
+<p><strong>FR-83:</strong> The system shall allow administrative users to deactivate facilities using soft deletion.</p>
+<p><strong>FR-84:</strong> The system shall validate operating hours format ensuring opening time precedes closing time for each day.</p>
+<p><strong>FR-85:</strong> The system shall support special operating hours for holidays or special events with date-specific overrides.</p>
+<hr />
+<h2 id="6educationalcollectionsmodule">6. Educational Collections Module</h2>
+<p><strong>FR-86:</strong> The system shall display listing of all active educational collections organized by subject area.</p>
+<p><strong>FR-87:</strong> The system shall display collections in card format showing title, subject area, age/grade level recommendations, content type, and thumbnail image.</p>
+<p><strong>FR-88:</strong> The system shall allow users to filter collections by subject area (Ancient Egyptian History, Archaeology, Art &amp; Architecture, Science &amp; Technology, Cultural Studies).</p>
+<p><strong>FR-89:</strong> The system shall allow users to filter collections by age range (Early Childhood 3-5, Primary 6-10, Middle School 11-13, High School 14-18, Adult).</p>
+<p><strong>FR-90:</strong> The system shall allow users to filter collections by content type (Artifacts, Documents, Multimedia, Interactive Activities, Virtual Tours).</p>
+<p><strong>FR-91:</strong> The system shall provide detailed collection view displaying complete description, learning objectives, curriculum standards alignment, artifact references, multimedia resources, and downloadable materials.</p>
+<p><strong>FR-92:</strong> The system shall display related collections or activities associated with current collection.</p>
+<p><strong>FR-93:</strong> The system shall allow users to download educational resources (PDFs, worksheets, activity guides) when available.</p>
+<p><strong>FR-94:</strong> The system shall track download counts for educational resources for usage analytics.</p>
+<p><strong>FR-95:</strong> The system shall allow administrative users to create educational collections by providing title, description, subject area, age/grade recommendations, learning objectives, curriculum alignments, content type, and associated media.</p>
+<p><strong>FR-96:</strong> The system shall allow administrative users to update collection information including all editable fields.</p>
+<p><strong>FR-97:</strong> The system shall allow administrative users to upload and associate multiple multimedia files with collections.</p>
+<p><strong>FR-98:</strong> The system shall allow administrative users to deactivate collections using soft deletion.</p>
+<hr />
+<h2 id="7kidszonemodule">7. Kids Zone Module</h2>
+<p><strong>FR-99:</strong> The system shall display listing of all active children's activities and programs.</p>
+<p><strong>FR-100:</strong> The system shall display activities in card format showing activity title, recommended age range, duration, activity type, and thumbnail image.</p>
+<p><strong>FR-101:</strong> The system shall allow users to filter activities by age group (Ages 3-5, Ages 6-8, Ages 9-12, Ages 13-15).</p>
+<p><strong>FR-102:</strong> The system shall allow users to filter activities by activity type (Workshops, Interactive Tours, Arts &amp; Crafts, Educational Games, Storytelling Sessions, Science Experiments).</p>
+<p><strong>FR-103:</strong> The system shall allow users to filter activities by schedule availability (Today, This Week, This Month, Weekends Only).</p>
+<p><strong>FR-104:</strong> The system shall provide detailed activity view displaying complete description, age recommendations, duration, schedule information, capacity limits, registration requirements, materials list, supervision requirements, and pricing (if applicable).</p>
+<p><strong>FR-105:</strong> The system shall display activity schedule showing days of week, time slots, and availability status.</p>
+<p><strong>FR-106:</strong> The system shall display activity capacity and current registration count when registration is required.</p>
+<p><strong>FR-107:</strong> The system shall allow authenticated users to register children for activities requiring advance registration, subject to capacity.</p>
+<p><strong>FR-108:</strong> The system shall collect child information during activity registration including child name, age, and parent/guardian contact information.</p>
+<p><strong>FR-109:</strong> The system shall send activity registration confirmation email including activity details, date/time, location, and preparation instructions.</p>
+<p><strong>FR-110:</strong> The system shall display special parental guidance notes or safety information for activities requiring supervision.</p>
+<p><strong>FR-111:</strong> The system shall allow administrative users to create kids activities by providing title, description, activity type, age range, duration, schedule, capacity, registration requirements, materials list, and images.</p>
+<p><strong>FR-112:</strong> The system shall allow administrative users to update activity information including all editable fields.</p>
+<p><strong>FR-113:</strong> The system shall allow administrative users to deactivate activities using soft deletion.</p>
+<p><strong>FR-114:</strong> The system shall send reminder notifications to parents/guardians 24 hours before registered activity.</p>
+<hr />
+<h2 id="8donationsmodule">8. Donations Module</h2>
+<p><strong>FR-115:</strong> The system shall display donations page explaining museum's mission, funding needs, and impact of donations.</p>
+<p><strong>FR-116:</strong> The system shall present predefined donation amount options (e.g., $25, $50, $100, $250, $500) and custom amount input field.</p>
+<p><strong>FR-117:</strong> The system shall allow users to select donation purpose from available categories (General Support, Conservation, Education Programs, Exhibitions, Kids Programs, Research).</p>
+<p><strong>FR-118:</strong> The system shall provide donation form collecting donor information including name, email, phone number, and billing address.</p>
+<p><strong>FR-119:</strong> The system shall allow donors to choose between one-time donation and recurring monthly donation.</p>
+<p><strong>FR-120:</strong> The system shall provide option for donors to make donation anonymously, excluding their name from recognition lists.</p>
+<p><strong>FR-121:</strong> The system shall provide option for donors to dedicate donation in honor or memory of another person.</p>
+<p><strong>FR-122:</strong> The system shall integrate with payment gateway to process donation transactions securely.</p>
+<p><strong>FR-123:</strong> The system shall generate unique donation receipt number upon successful donation processing.</p>
+<p><strong>FR-124:</strong> The system shall send donation confirmation email containing receipt number, donation amount, purpose, tax deductibility information, and thank you message.</p>
+<p><strong>FR-125:</strong> The system shall send donation tax receipt email containing information required for tax deduction purposes.</p>
+<p><strong>FR-126:</strong> The system shall allow donors to create account and view donation history showing all contributions, dates, amounts, and purposes.</p>
+<p><strong>FR-127:</strong> The system shall display donor recognition wall showing names of donors who have not opted for anonymity (with permission).</p>
+<p><strong>FR-128:</strong> The system shall categorize donors into recognition tiers based on cumulative donation amounts (Supporter, Patron, Benefactor, Legacy Circle).</p>
+<p><strong>FR-129:</strong> The system shall allow administrative users to configure donation amount options, categories, and recognition tier thresholds.</p>
+<p><strong>FR-130:</strong> The system shall maintain secure donation transaction logs for audit and compliance purposes.</p>
+<hr />
+<h2 id="9userauthenticationaccountmanagementmodule">9. User Authentication &amp; Account Management Module</h2>
+<h3 id="91userregistration">9.1 User Registration</h3>
+<p><strong>FR-131:</strong> The system shall provide registration form collecting full name, email address, password, password confirmation, phone number, and nationality.</p>
+<p><strong>FR-132:</strong> The system shall validate email address format using RFC 5322 compliant regex pattern.</p>
+<p><strong>FR-133:</strong> The system shall verify email uniqueness, rejecting registration attempts with previously registered email addresses.</p>
+<p><strong>FR-134:</strong> The system shall enforce password complexity requirements: minimum 8 characters, at least one uppercase letter, one lowercase letter, one numeric digit, and one special character.</p>
+<p><strong>FR-135:</strong> The system shall verify password and password confirmation fields match before accepting registration.</p>
+<p><strong>FR-136:</strong> The system shall hash passwords using bcrypt algorithm with cost factor of 10 before database storage.</p>
+<p><strong>FR-137:</strong> The system shall create user account with status "Pending Email Verification" upon registration submission.</p>
+<p><strong>FR-138:</strong> The system shall generate cryptographically secure email verification token (minimum 32 characters) upon registration.</p>
+<p><strong>FR-139:</strong> The system shall send verification email containing unique verification link to provided email address.</p>
+<p><strong>FR-140:</strong> The system shall display registration confirmation message instructing user to verify email.</p>
+<p><strong>FR-141:</strong> The system shall validate email verification token when user clicks verification link.</p>
+<p><strong>FR-142:</strong> The system shall activate user account (change status to "Active") upon successful email verification.</p>
+<p><strong>FR-143:</strong> The system shall expire email verification tokens after 24 hours from generation.</p>
+<p><strong>FR-144:</strong> The system shall allow users to request new verification email if token has expired.</p>
+<h3 id="92userlogin">9.2 User Login</h3>
+<p><strong>FR-145:</strong> The system shall provide login form accepting email address and password credentials.</p>
+<p><strong>FR-146:</strong> The system shall validate credentials by retrieving user record matching provided email and verifying password against stored hash.</p>
+<p><strong>FR-147:</strong> The system shall use timing-attack-resistant password comparison function for secure validation.</p>
+<p><strong>FR-148:</strong> The system shall create server-side session upon successful authentication, generating unique session identifier.</p>
+<p><strong>FR-149:</strong> The system shall store session identifier in HTTP-only, Secure, SameSite=Strict cookie in user's browser.</p>
+<p><strong>FR-150:</strong> The system shall set session expiration at 24 hours from creation or 2 hours from last activity, whichever is sooner.</p>
+<p><strong>FR-151:</strong> The system shall redirect authenticated users to dashboard or originally requested page after successful login.</p>
+<p><strong>FR-152:</strong> The system shall display generic error message for failed login attempts without indicating whether email or password was incorrect.</p>
+<p><strong>FR-153:</strong> The system shall implement rate limiting preventing more than 5 failed login attempts within 15-minute window per IP address.</p>
+<p><strong>FR-154:</strong> The system shall temporarily lock account after 10 failed login attempts within 1 hour, requiring password reset.</p>
+<p><strong>FR-155:</strong> The system shall log all authentication events including timestamp, IP address, user identifier, and result (success/failure).</p>
+<p><strong>FR-156:</strong> The system shall prevent login for accounts with status "Pending Email Verification," displaying appropriate message.</p>
+<p><strong>FR-157:</strong> The system shall prevent login for accounts with status "Suspended" or "Deactivated," displaying appropriate message.</p>
+<h3 id="93sessionmanagement">9.3 Session Management</h3>
+<p><strong>FR-158:</strong> The system shall validate session on every request to protected resources, verifying session existence, expiration, and associated user account status.</p>
+<p><strong>FR-159:</strong> The system shall update session last activity timestamp on each validated request.</p>
+<p><strong>FR-160:</strong> The system shall destroy invalid or expired sessions and redirect to login page with session timeout message.</p>
+<p><strong>FR-161:</strong> The system shall implement session regeneration upon successful login to prevent session fixation attacks.</p>
+<p><strong>FR-162:</strong> The system shall implement automatic session cleanup task removing expired sessions from storage at configurable intervals.</p>
+<p><strong>FR-163:</strong> The system shall allow users to view active sessions showing login date/time, IP address, and device information.</p>
+<p><strong>FR-164:</strong> The system shall allow users to terminate individual active sessions remotely.</p>
+<h3 id="94userlogout">9.4 User Logout</h3>
+<p><strong>FR-165:</strong> The system shall provide logout functionality accessible from all authenticated pages.</p>
+<p><strong>FR-166:</strong> The system shall destroy server-side session record upon logout request.</p>
+<p><strong>FR-167:</strong> The system shall clear session cookie from user's browser upon logout.</p>
+<p><strong>FR-168:</strong> The system shall redirect user to home page or login page after successful logout.</p>
+<p><strong>FR-169:</strong> The system shall display logout confirmation message.</p>
+<h3 id="95profilemanagement">9.5 Profile Management</h3>
+<p><strong>FR-170:</strong> The system shall provide profile management interface allowing users to view current account information.</p>
+<p><strong>FR-171:</strong> The system shall allow users to update full name, phone number, nationality, and communication preferences.</p>
+<p><strong>FR-172:</strong> The system shall prevent users from modifying email address through profile interface (requiring separate email change workflow).</p>
+<p><strong>FR-173:</strong> The system shall validate updated profile information before saving changes.</p>
+<p><strong>FR-174:</strong> The system shall display success confirmation message after profile update.</p>
+<p><strong>FR-175:</strong> The system shall send notification email when profile information is modified.</p>
+<h3 id="96passwordmanagement">9.6 Password Management</h3>
+<p><strong>FR-176:</strong> The system shall provide password change functionality requiring current password verification.</p>
+<p><strong>FR-177:</strong> The system shall validate new password meets complexity requirements during password change.</p>
+<p><strong>FR-178:</strong> The system shall verify new password differs from current password.</p>
+<p><strong>FR-179:</strong> The system shall hash new password and update user record upon successful password change.</p>
+<p><strong>FR-180:</strong> The system shall invalidate all existing sessions except current session after successful password change.</p>
+<p><strong>FR-181:</strong> The system shall send password change confirmation email to user's registered email address.</p>
+<h3 id="97passwordrecovery">9.7 Password Recovery</h3>
+<p><strong>FR-182:</strong> The system shall provide password recovery link on login page.</p>
+<p><strong>FR-183:</strong> The system shall display password recovery form requesting user's email address.</p>
+<p><strong>FR-184:</strong> The system shall generate cryptographically secure password reset token (minimum 32 characters) for valid email addresses.</p>
+<p><strong>FR-185:</strong> The system shall send password reset email containing unique reset link to provided email address.</p>
+<p><strong>FR-186:</strong> The system shall display generic success message after password recovery submission regardless of email existence.</p>
+<p><strong>FR-187:</strong> The system shall expire password reset tokens after 1 hour from generation.</p>
+<p><strong>FR-188:</strong> The system shall validate password reset token when user accesses reset link.</p>
+<p><strong>FR-189:</strong> The system shall display new password form for valid, non-expired reset tokens.</p>
+<p><strong>FR-190:</strong> The system shall validate new password meets complexity requirements during password reset.</p>
+<p><strong>FR-191:</strong> The system shall hash new password, update user record, and invalidate reset token upon successful password reset.</p>
+<p><strong>FR-192:</strong> The system shall invalidate all existing sessions after password reset for security.</p>
+<p><strong>FR-193:</strong> The system shall send password reset confirmation email after successful password change.</p>
+<p><strong>FR-194:</strong> The system shall redirect user to login page after successful password reset.</p>
+<hr />
+<h2 id="10authorizationrolemanagementmodule">10. Authorization &amp; Role Management Module</h2>
+<p><strong>FR-195:</strong> The system shall support three user roles: Guest (anonymous), Registered User, and Administrator.</p>
+<p><strong>FR-196:</strong> The system shall assign "Registered User" role to all newly created accounts by default.</p>
+<p><strong>FR-197:</strong> The system shall allow administrative users to assign "Administrator" role to other users.</p>
+<p><strong>FR-198:</strong> The system shall implement role-based access control restricting administrative functions to users with Administrator role.</p>
+<p><strong>FR-199:</strong> The system shall verify user role before granting access to role-restricted functionality.</p>
+<p><strong>FR-200:</strong> The system shall display appropriate error message when users attempt to access unauthorized functionality.</p>
+<p><strong>FR-201:</strong> The system shall log all authorization failures including timestamp, user identifier, and attempted action.</p>
+<hr />
+<h2 id="11searchfunctionalitymodule">11. Search Functionality Module</h2>
+<p><strong>FR-202:</strong> The system shall provide site-wide search functionality accessible from all pages.</p>
+<p><strong>FR-203:</strong> The system shall allow users to search across plans, events, facilities, educational collections, and kids activities.</p>
+<p><strong>FR-204:</strong> The system shall implement keyword-based search matching against titles, descriptions, and tags.</p>
+<p><strong>FR-205:</strong> The system shall display search results grouped by content type (Plans, Events, Facilities, Collections, Activities).</p>
+<p><strong>FR-206:</strong> The system shall display search result count for each content type category.</p>
+<p><strong>FR-207:</strong> The system shall highlight matching keywords in search result snippets.</p>
+<p><strong>FR-208:</strong> The system shall provide filtering options on search results page by content type and date range.</p>
+<p><strong>FR-209:</strong> The system shall display "No results found" message when search query returns zero results, suggesting alternative search terms.</p>
+<p><strong>FR-210:</strong> The system shall implement search history for authenticated users showing recent searches.</p>
+<hr />
+<h2 id="12notificationcommunicationmodule">12. Notification &amp; Communication Module</h2>
+<p><strong>FR-211:</strong> The system shall send welcome email upon successful account registration and email verification.</p>
+<p><strong>FR-212:</strong> The system shall send booking confirmation email immediately after successful booking creation.</p>
+<p><strong>FR-213:</strong> The system shall send booking modification confirmation email when booking is updated.</p>
+<p><strong>FR-214:</strong> The system shall send booking cancellation confirmation email when booking is cancelled.</p>
+<p><strong>FR-215:</strong> The system shall send booking reminder email 48 hours before scheduled visit date (configurable).</p>
+<p><strong>FR-216:</strong> The system shall send event registration confirmation email upon successful event registration.</p>
+<p><strong>FR-217:</strong> The system shall send event reminder email 48 hours before registered event (configurable).</p>
+<p><strong>FR-218:</strong> The system shall send kids activity registration confirmation email upon successful registration.</p>
+<p><strong>FR-219:</strong> The system shall send kids activity reminder email 24 hours before scheduled activity.</p>
+<p><strong>FR-220:</strong> The system shall send donation receipt email immediately after successful donation processing.</p>
+<p><strong>FR-221:</strong> The system shall send password reset email when password recovery is requested.</p>
+<p><strong>FR-222:</strong> The system shall send password change confirmation email when password is successfully changed.</p>
+<p><strong>FR-223:</strong> The system shall send profile modification notification email when profile information is updated.</p>
+<p><strong>FR-224:</strong> The system shall maintain email template system for consistent branding and formatting across all transactional emails.</p>
+<p><strong>FR-225:</strong> The system shall allow administrative users to configure email templates for different notification types.</p>
+<p><strong>FR-226:</strong> The system shall log all email delivery attempts including timestamp, recipient, subject, and delivery status.</p>
+<hr />
+<h2 id="13contentmanagementmoduleadministrative">13. Content Management Module (Administrative)</h2>
+<p><strong>FR-227:</strong> The system shall provide administrative dashboard displaying system statistics including total users, active bookings, upcoming events, and recent activities.</p>
+<p><strong>FR-228:</strong> The system shall provide content management interface for creating, updating, and deactivating plans.</p>
+<p><strong>FR-229:</strong> The system shall provide content management interface for creating, updating, and deactivating events.</p>
+<p><strong>FR-230:</strong> The system shall provide content management interface for creating, updating, and deactivating food facilities.</p>
+<p><strong>FR-231:</strong> The system shall provide content management interface for creating, updating, and deactivating educational collections.</p>
+<p><strong>FR-232:</strong> The system shall provide content management interface for creating, updating, and deactivating kids activities.</p>
+<p><strong>FR-233:</strong> The system shall provide image upload functionality supporting JPEG, PNG, and GIF formats with maximum file size of 5MB.</p>
+<p><strong>FR-234:</strong> The system shall automatically resize and optimize uploaded images for web display while maintaining aspect ratio.</p>
+<p><strong>FR-235:</strong> The system shall provide document upload functionality supporting PDF format with maximum file size of 10MB.</p>
+<p><strong>FR-236:</strong> The system shall validate all uploaded files for file type, size, and malicious content before acceptance.</p>
+<p><strong>FR-237:</strong> The system shall display content management forms with inline validation providing immediate feedback on errors.</p>
+<p><strong>FR-238:</strong> The system shall implement draft/publish workflow allowing administrators to save content as draft before publishing.</p>
+<p><strong>FR-239:</strong> The system shall display audit trail for all content showing creation date, last modification date, and modifying user.</p>
+<p><strong>FR-240:</strong> The system shall allow administrative users to preview content before publishing to verify appearance and formatting.</p>
+<hr />
+<h2 id="14reportinganalyticsmoduleadministrative">14. Reporting &amp; Analytics Module (Administrative)</h2>
+<p><strong>FR-241:</strong> The system shall generate booking reports showing total bookings by date range, status distribution, and revenue summary.</p>
+<p><strong>FR-242:</strong> The system shall generate visitor analytics reports showing visitor demographics, plan preferences, and peak visit times.</p>
+<p><strong>FR-243:</strong> The system shall generate event registration reports showing registration counts, attendance tracking, and popular event types.</p>
+<p><strong>FR-244:</strong> The system shall generate donation reports showing total donations by date range, purpose distribution, and donor statistics.</p>
+<p><strong>FR-245:</strong> The system shall generate user activity reports showing registration trends, active users, and engagement metrics.</p>
+<p><strong>FR-246:</strong> The system shall allow administrative users to export reports in CSV and PDF formats.</p>
+<p><strong>FR-247:</strong> The system shall provide capacity utilization dashboard showing booking rates and available capacity by date.</p>
+<p><strong>FR-248:</strong> The system shall display real-time statistics on administrative dashboard including today's bookings, active users online, and pending registrations.</p>
+<hr />
+<h2 id="15systemconfigurationmoduleadministrative">15. System Configuration Module (Administrative)</h2>
+<p><strong>FR-249:</strong> The system shall allow administrative users to configure capacity limits for daily bookings and individual time slots.</p>
+<p><strong>FR-250:</strong> The system shall allow administrative users to configure booking policy parameters including advance booking window, modification deadline, and cancellation deadline.</p>
+<p><strong>FR-251:</strong> The system shall allow administrative users to configure ticket pricing including base prices and differential pricing by age category.</p>
+<p><strong>FR-252:</strong> The system shall allow administrative users to configure operating hours for museum and individual facilities.</p>
+<p><strong>FR-253:</strong> The system shall allow administrative users to configure email templates for all notification types.</p>
+<p><strong>FR-254:</strong> The system shall allow administrative users to configure site-wide settings including site name, contact information, and social media links.</p>
+<p><strong>FR-255:</strong> The system shall allow administrative users to configure donation categories, amount options, and recognition tiers.</p>
+<p><strong>FR-256:</strong> The system shall validate all configuration changes ensuring values are within acceptable ranges before saving.</p>
+<p><strong>FR-257:</strong> The system shall maintain configuration change history logging all modifications with timestamp and modifying user.</p>
+<p><strong>FR-258:</strong> The system shall implement backup and restore functionality for system configuration settings.</p>
+<hr />
+<p><strong>Total Functional Requirements: 258</strong></p>
+<p><strong>Document Classification:</strong> System Requirements<br />
+<strong>Last Updated:</strong> December 15, 2025<br />
+<strong>Status:</strong> Approved for Implementation</p>
+      </body>
+      </html>
+    

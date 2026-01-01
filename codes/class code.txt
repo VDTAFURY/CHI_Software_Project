@@ -1,0 +1,586 @@
+@startuml Grand Egyptian Museum Web Application - Class Diagram
+
+' ==================== STYLING ====================
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+skinparam class {
+    BackgroundColor LightBlue
+    BorderColor DarkBlue
+    ArrowColor Black
+}
+skinparam linetype ortho
+
+' إزالة العلامات اللي فوق الكلاسات (الـ stereotype icons زي C و A)
+skinparam stereotypeCBackgroundColor none
+skinparam stereotypeCColor none
+skinparam stereotypeABackgroundColor none
+skinparam stereotypeAColor none
+
+' زيادة المسافات بشكل كبير عشان الخطوط متلخبطش خالص
+skinparam nodesep 120
+skinparam ranksep 140
+
+' مسافات إضافية داخل الـ packages
+skinparam package {
+    nodesep 80
+    ranksep 100
+}
+
+' ألوان واضحة ومميزة لكل نوع علاقة
+skinparam arrowColor #333333
+
+' Composition (ماس ممتلئ) - أحمر غامق
+skinparam compositionArrowColor #CC0000
+
+' Aggregation (ماس فارغ) - أخضر غامق
+skinparam aggregationArrowColor #008800
+
+' Inheritance - بنفسجي
+skinparam generalizationArrowColor #8800AA
+
+' Dependency (متقطع) - أزرق
+skinparam dependencyArrowColor #0000CC
+
+' ==================== MODEL LAYER ====================
+package "Models Layer (Business Logic)" #LightYellow {
+    class User {
+        - id: int
+        - fullName: string
+        - email: string
+        - passwordHash: string
+        - phoneNumber: string
+        - nationality: string
+        - accountStatus: string
+        - userRole: string
+        - emailVerified: boolean
+        - registrationTimestamp: datetime
+        - lastLoginTimestamp: datetime
+        --
+        + register(): boolean
+        + verifyEmail(token: string): boolean
+        + login(email: string, password: string): boolean
+        + logout(): boolean
+        + updateProfile(data: array): boolean
+        + changePassword(old: string, new: string): boolean
+        + requestPasswordReset(): boolean
+        + resetPassword(token: string, password: string): boolean
+        + isAdmin(): boolean
+        + isActive(): boolean
+    }
+
+    class Booking {
+        - id: int
+        - userId: int
+        - planId: int
+        - visitDate: date
+        - timeSlot: string
+        - visitorQuantity: int
+        - totalCost: decimal
+        - bookingReference: string
+        - bookingStatus: string
+        - creationTimestamp: datetime
+        --
+        + create(data: array): boolean
+        + update(id: int, data: array): boolean
+        + cancel(id: int): boolean
+        + checkAvailability(date: date, slot: string): boolean
+        + calculateCost(quantity: int): decimal
+        + generateReference(): string
+        + getUpcoming(userId: int): array
+        + getPast(userId: int): array
+    }
+
+    class Plan {
+        - id: int
+        - title: string
+        - description: string
+        - duration: int
+        - difficultyLevel: string
+        - targetAudience: string
+        - thumbnailImage: string
+        - status: string
+        --
+        + getAllActive(): array
+        + getById(id: int): Plan
+        + create(data: array): boolean
+        + update(id: int, data: array): boolean
+        + softDelete(id: int): boolean
+        + filterByDuration(min: int, max: int): array
+    }
+
+    class Event {
+        - id: int
+        - title: string
+        - description: string
+        - eventType: string
+        - startDate: date
+        - endDate: date
+        - location: string
+        - capacity: int
+        - status: string
+        --
+        + getAllActive(): array
+        + getCurrent(): array
+        + getUpcoming(): array
+        + create(data: array): boolean
+        + update(id: int, data: array): boolean
+        + filterByType(type: string): array
+    }
+
+    class FoodFacility {
+        - id: int
+        - facilityName: string
+        - description: string
+        - cuisineType: string
+        - serviceStyle: string
+        - operatingHours: array
+        - priceRange: string
+        - status: string
+        --
+        + getAllActive(): array
+        + getById(id: int): FoodFacility
+        + filterByCuisine(cuisine: string): array
+        + isOpen(): boolean
+    }
+
+    class EducationalCollection {
+        - id: int
+        - title: string
+        - description: string
+        - subjectArea: string
+        - ageRecommendation: string
+        - contentType: string
+        - status: string
+        --
+        + getAllActive(): array
+        + filterBySubject(subject: string): array
+        + filterByAge(ageRange: string): array
+    }
+
+    class KidsActivity {
+        - id: int
+        - activityTitle: string
+        - description: string
+        - activityType: string
+        - recommendedAgeRange: string
+        - duration: int
+        - capacity: int
+        - status: string
+        --
+        + getAllActive(): array
+        + filterByAge(ageRange: string): array
+        + isFull(): boolean
+    }
+
+    class Session {
+        - sessionId: string
+        - userId: int
+        - sessionData: array
+        - creationTimestamp: datetime
+        - expirationTimestamp: datetime
+        --
+        + create(userId: int): boolean
+        + validate(): boolean
+        + destroy(): boolean
+        + isExpired(): boolean
+    }
+
+    class Capacity {
+        - id: int
+        - visitDate: date
+        - timeSlot: string
+        - maxCapacity: int
+        - bookedCapacity: int
+        - availableCapacity: int
+        --
+        + checkAvailability(date: date, slot: string, quantity: int): boolean
+        + reserve(date: date, slot: string, quantity: int): boolean
+        + release(date: date, slot: string, quantity: int): boolean
+    }
+
+    class EmailVerificationToken {
+        - id: int
+        - userId: int
+        - token: string
+        - expirationTimestamp: datetime
+        - isUsed: boolean
+        --
+        + generate(userId: int): string
+        + validate(token: string): boolean
+        + isExpired(): boolean
+    }
+
+    class PasswordResetToken {
+        - id: int
+        - userId: int
+        - token: string
+        - expirationTimestamp: datetime
+        - isUsed: boolean
+        --
+        + generate(userId: int): string
+        + validate(token: string): boolean
+    }
+
+    class AuditLog {
+        - id: int
+        - userId: int
+        - action: string
+        - entityType: string
+        - entityId: int
+        - timestamp: datetime
+        --
+        + log(userId: int, action: string): boolean
+        + getByUser(userId: int): array
+    }
+}
+
+' ==================== CONTROLLER LAYER ====================
+package "Controller Layer (Request Handling)" #LightGreen {
+    class AuthController {
+        --
+        + showRegister(): View
+        + register(data: array): Response
+        + verifyEmail(token: string): Response
+        + showLogin(): View
+        + login(email: string, password: string): Response
+        + logout(): Response
+        + showForgotPassword(): View
+        + sendPasswordReset(email: string): Response
+        + resetPassword(token: string, password: string): Response
+    }
+
+    class BookingController {
+        --
+        + index(): View
+        + create(): View
+        + store(data: array): Response
+        + show(id: int): View
+        + edit(id: int): View
+        + update(id: int, data: array): Response
+        + cancel(id: int): Response
+    }
+
+    class PlanController {
+        --
+        + index(): View
+        + show(id: int): View
+        + filter(criteria: array): View
+        + admin_create(): View
+        + admin_store(data: array): Response
+        + admin_update(id: int, data: array): Response
+    }
+
+    class EventController {
+        --
+        + index(): View
+        + show(id: int): View
+        + filter(criteria: array): View
+        + admin_create(): View
+        + admin_store(data: array): Response
+    }
+
+    class FoodController {
+        --
+        + index(): View
+        + show(id: int): View
+        + admin_update(id: int, data: array): Response
+    }
+
+    class EducationController {
+        --
+        + collections(): View
+        + showCollection(id: int): View
+        + kidsActivities(): View
+        + showActivity(id: int): View
+        + admin_createCollection(): View
+        + admin_createActivity(): View
+    }
+
+    class ProfileController {
+        --
+        + show(): View
+        + edit(): View
+        + update(data: array): Response
+        + changePassword(data: array): Response
+    }
+
+    class AdminController {
+        --
+        + dashboard(): View
+        + bookings(): View
+        + auditLogs(): View
+    }
+}
+
+' ==================== VIEW LAYER ====================
+package "View Layer (Presentation)" #LightCyan {
+    class View {
+        - viewPath: string
+        - data: array
+        - layout: string
+        --
+        + render(): string
+        + setData(key: string, value: mixed): void
+        + escape(text: string): string
+    }
+
+    class LayoutView {
+        - header: string
+        - footer: string
+        - navigation: string
+        --
+        + renderHeader(): string
+        + renderFooter(): string
+        + renderNavigation(): string
+    }
+
+    class FormView {
+        --
+        + renderInput(name: string, type: string): string
+        + renderError(field: string): string
+        + renderCSRFToken(): string
+    }
+}
+
+' ==================== UTILITY LAYER ====================
+package "Utility Layer" #LightSalmon {
+    class Router {
+        - routes: array
+        --
+        + addRoute(method: string, path: string, handler: string): void
+        + dispatch(request: Request): Response
+        + matchRoute(url: string, method: string): Route
+    }
+
+    class Request {
+        - method: string
+        - uri: string
+        - params: array
+        - body: array
+        --
+        + getMethod(): string
+        + getParam(key: string): mixed
+        + getBody(key: string): mixed
+    }
+
+    class Response {
+        - statusCode: int
+        - content: string
+        --
+        + setContent(content: string): void
+        + json(data: array): void
+        + redirect(url: string): void
+    }
+
+    class Database {
+        - connection: PDO
+        --
+        + connect(): PDO
+        + query(sql: string, params: array): array
+        + execute(sql: string, params: array): boolean
+        + beginTransaction(): boolean
+        + commit(): boolean
+    }
+
+    class Validator {
+        - rules: array
+        - errors: array
+        --
+        + validate(data: array, rules: array): boolean
+        + required(value: mixed): boolean
+        + email(value: string): boolean
+        + password(value: string): boolean
+        + getErrors(): array
+    }
+
+    class Security {
+        --
+        + hashPassword(password: string): string
+        + verifyPassword(password: string, hash: string): boolean
+        + generateToken(length: int): string
+        + generateCSRFToken(): string
+        + validateCSRFToken(token: string): boolean
+        + sanitizeInput(input: string): string
+        + escapeOutput(output: string): string
+    }
+
+    class EmailService {
+        - smtpHost: string
+        - smtpPort: int
+        --
+        + sendBookingConfirmation(booking: Booking, user: User): boolean
+        + sendVerificationEmail(user: User, token: string): boolean
+        + sendPasswordReset(user: User, token: string): boolean
+        + send(to: string, subject: string, body: string): boolean
+    }
+
+    class FileUploader {
+        - uploadPath: string
+        - maxFileSize: int
+        --
+        + upload(file: File): string
+        + validate(file: File): boolean
+        + generateUniqueName(filename: string): string
+    }
+
+    class Logger {
+        - logPath: string
+        --
+        + error(message: string): void
+        + info(message: string): void
+        + warning(message: string): void
+    }
+
+    class Cache {
+        - cacheDir: string
+        --
+        + get(key: string): mixed
+        + set(key: string, value: mixed): boolean
+        + delete(key: string): boolean
+    }
+}
+
+' ==================== MIDDLEWARE LAYER ====================
+package "Middleware Layer" #Lavender {
+    abstract class Middleware {
+        {abstract} + handle(request: Request, next: callable): Response
+    }
+
+    class AuthMiddleware {
+        --
+        + handle(request: Request, next: callable): Response
+        + checkAuthentication(): boolean
+    }
+
+    class AdminMiddleware {
+        --
+        + handle(request: Request, next: callable): Response
+        + checkAdminRole(): boolean
+    }
+
+    class CSRFMiddleware {
+        --
+        + handle(request: Request, next: callable): Response
+        + validateToken(request: Request): boolean
+    }
+
+    class RateLimitMiddleware {
+        --
+        + handle(request: Request, next: callable): Response
+        + checkRateLimit(ip: string): boolean
+    }
+}
+
+' ==================== CONFIG LAYER ====================
+package "Configuration Layer" #Wheat {
+    class Config {
+        - configData: array
+        --
+        + get(key: string): mixed
+        + set(key: string, value: mixed): void
+    }
+
+    class DatabaseConfig {
+        + host: string
+        + dbName: string
+        + username: string
+        + password: string
+    }
+
+    class EmailConfig {
+        + smtpHost: string
+        + smtpPort: int
+        + fromAddress: string
+    }
+
+    class AppConfig {
+        + appName: string
+        + environment: string
+        + sessionLifetime: int
+    }
+}
+
+' ==================== RELATIONSHIPS - MODEL LAYER ====================
+User "1" *-- "0..*" Booking : has
+User "1" *-- "0..*" Session : has
+User "1" *-- "0..1" EmailVerificationToken : has
+User "1" *-- "0..1" PasswordResetToken : has
+User "1" o-- "0..*" AuditLog : generates
+Booking "*" o-- "0..1" Plan : references
+Booking "*" o-- "1" Capacity : consumes
+
+' ==================== RELATIONSHIPS - CONTROLLER TO MODEL ====================
+AuthController ..> User : <<use>>
+AuthController ..> EmailVerificationToken : <<use>>
+AuthController ..> PasswordResetToken : <<use>>
+BookingController ..> Booking : <<use>>
+BookingController ..> Capacity : <<use>>
+PlanController ..> Plan : <<use>>
+EventController ..> Event : <<use>>
+FoodController ..> FoodFacility : <<use>>
+EducationController ..> EducationalCollection : <<use>>
+EducationController ..> KidsActivity : <<use>>
+ProfileController ..> User : <<use>>
+AdminController ..> AuditLog : <<use>>
+
+' ==================== RELATIONSHIPS - CONTROLLER TO VIEW ====================
+AuthController ..> View : <<render>>
+BookingController ..> View : <<render>>
+PlanController ..> View : <<render>>
+EventController ..> View : <<render>>
+FoodController ..> View : <<render>>
+EducationController ..> View : <<render>>
+ProfileController ..> View : <<render>>
+AdminController ..> View : <<render>>
+
+' ==================== RELATIONSHIPS - VIEW LAYER ====================
+View <|-- LayoutView
+View <|-- FormView
+View ..> Security : <<escape with>>
+
+' ==================== RELATIONSHIPS - ROUTER ====================
+Router o-- Request : processes
+Router o-- Response : generates
+Router ..> AuthController : routes to
+Router ..> BookingController : routes to
+Router ..> PlanController : routes to
+Router ..> EventController : routes to
+Router ..> FoodController : routes to
+Router ..> EducationController : routes to
+Router ..> ProfileController : routes to
+Router ..> AdminController : routes to
+
+' ==================== RELATIONSHIPS - MIDDLEWARE ====================
+Middleware <|-- AuthMiddleware
+Middleware <|-- AdminMiddleware
+Middleware <|-- CSRFMiddleware
+Middleware <|-- RateLimitMiddleware
+Router ..> Middleware : applies
+
+' ==================== RELATIONSHIPS - DATABASE ====================
+Database <.. User : persists
+Database <.. Booking : persists
+Database <.. Plan : persists
+Database <.. Event : persists
+Database <.. FoodFacility : persists
+Database <.. EducationalCollection : persists
+Database <.. KidsActivity : persists
+Database <.. Session : persists
+Database <.. Capacity : persists
+
+' ==================== RELATIONSHIPS - UTILITIES ====================
+AuthController ..> Security : uses
+AuthController ..> Validator : uses
+AuthController ..> EmailService : uses
+BookingController ..> Validator : uses
+BookingController ..> EmailService : uses
+Security ..> Config : configured by
+Database ..> DatabaseConfig : configured by
+EmailService ..> EmailConfig : configured by
+
+' ==================== RELATIONSHIPS - CONFIG ====================
+Config <|-- DatabaseConfig
+Config <|-- EmailConfig
+Config <|-- AppConfig
+
+@enduml

@@ -1,0 +1,292 @@
+@startuml Grand Egyptian Museum Web Application - Complete Use Case Diagram
+
+left to right direction
+skinparam packageStyle rectangle
+skinparam usecase {
+    BackgroundColor LightBlue
+    BorderColor DarkBlue
+    ArrowColor Black
+    FontSize 10
+}
+skinparam actor {
+    BackgroundColor LightYellow
+    BorderColor DarkOrange
+    FontSize 10
+}
+skinparam linetype ortho
+skinparam nodesep 80
+skinparam ranksep 100
+skinparam padding 25
+skinparam minClassWidth 150
+skinparam ArrowThickness 1.5
+
+' ==================== ACTORS WITH GENERALIZATION ====================
+actor "Guest User" as Guest #LightGreen
+actor "Anonymous Visitor" as Anonymous #LightYellow
+actor "Registered Visitor" as Registered #LightCyan
+actor "Administrative User" as Admin #LightPink
+
+' External System Actors
+actor "Email System" as Email #LightGray
+actor "Payment Gateway" as Payment #LightGray
+
+' ==================== GENERALIZATION RELATIONSHIPS ====================
+Guest <|-[#Purple]- Anonymous : <<generalizes>>
+Guest <|-[#Purple]- Registered : <<generalizes>>
+Registered <|-[#Purple]- Admin : <<generalizes>>
+
+' ==================== MAIN SYSTEM BOUNDARY ====================
+rectangle "Grand Egyptian Museum Web Application System" {
+  
+  ' ==================== VISITOR INFORMATION SERVICES ====================
+  package "Information Services" #AliceBlue {
+    
+    usecase "Browse Museum\nVisit Plans" as UC1 #LightYellow
+    usecase "View Plan\nDetails" as UC2 #LightYellow
+    usecase "Browse Events\nand Exhibitions" as UC3 #LightYellow
+    usecase "View Event\nDetails" as UC4 #LightYellow
+    usecase "Browse Food\nand Dining" as UC5 #LightYellow
+    usecase "View Dining\nFacility Details" as UC6 #LightYellow
+    usecase "Browse Educational\nCollections" as UC7 #LightYellow
+    usecase "View Collection\nDetails" as UC8 #LightYellow
+    usecase "Browse Kids\nActivities" as UC9 #LightYellow
+    usecase "View Activity\nDetails" as UC10 #LightYellow
+    usecase "Search Content" as UC11 #LightYellow
+    usecase "Filter Results" as UC12 #LightYellow
+  }
+  
+  ' ==================== USER ACCOUNT SERVICES ====================
+  package "Account Management Services" #LightCyan {
+    
+    usecase "Register New\nAccount" as UC27 #Cyan
+    usecase "Verify Email\nAddress" as UC28 #Cyan
+    usecase "Login to\nSystem" as UC29 #Cyan
+    usecase "Logout from\nSystem" as UC30 #Cyan
+    usecase "View Personal\nProfile" as UC31 #Cyan
+    usecase "Update Personal\nProfile" as UC32 #Cyan
+    usecase "Change Current\nPassword" as UC33 #Cyan
+    usecase "Reset Forgotten\nPassword" as UC34 #Cyan
+    usecase "Delete Account" as UC35 #Cyan
+    usecase "Manage User\nSession" as UC36 #White
+    usecase "Validate User\nCredentials" as UC37 #White
+  }
+  
+  ' ==================== TRANSACTION SERVICES ====================
+  package "Booking and Transaction Services" #LightGreen {
+    
+    usecase "Create New\nBooking" as UC17 #Orange
+    usecase "View Booking\nHistory" as UC18 #Orange
+    usecase "View Booking\nDetails" as UC19 #Orange
+    usecase "Modify Existing\nBooking" as UC20 #Orange
+    usecase "Cancel Active\nBooking" as UC21 #Orange
+    usecase "Print Booking\nTicket" as UC22 #Orange
+    usecase "Calculate Booking\nCost" as UC23 #White
+    usecase "Generate Booking\nReference Number" as UC24 #White
+    usecase "Check Available\nCapacity" as UC25 #White
+    usecase "Update Available\nCapacity" as UC26 #White
+  }
+  
+  ' ==================== ADMINISTRATIVE FUNCTIONS ====================
+  package "Administrative Functions" #LightPink {
+    
+    usecase "Manage Visit\nPlans" as UC38 #Pink
+    usecase "Add Visit Plan" as UC39 #Pink
+    usecase "Edit Visit Plan" as UC40 #Pink
+    usecase "Delete Visit Plan" as UC41 #Pink
+    
+    usecase "Manage Events and\nExhibitions" as UC42 #Pink
+    usecase "Add Event" as UC43 #Pink
+    usecase "Edit Event" as UC44 #Pink
+    usecase "Delete Event" as UC45 #Pink
+    
+    usecase "Manage Food\nFacilities" as UC46 #Pink
+    usecase "Add Food Facility" as UC47 #Pink
+    usecase "Edit Food Facility" as UC48 #Pink
+    usecase "Delete Food Facility" as UC49 #Pink
+    
+    usecase "Manage Educational\nCollections" as UC50 #Pink
+    usecase "Add Collection" as UC51 #Pink
+    usecase "Edit Collection" as UC52 #Pink
+    usecase "Delete Collection" as UC53 #Pink
+    
+    usecase "Manage Kids\nActivities" as UC54 #Pink
+    usecase "Add Activity" as UC55 #Pink
+    usecase "Edit Activity" as UC56 #Pink
+    usecase "Delete Activity" as UC57 #Pink
+    
+    usecase "View All System\nBookings" as UC58 #Pink
+    usecase "Modify Any User\nBooking" as UC59 #Pink
+    usecase "Cancel Any User\nBooking" as UC60 #Pink
+    usecase "Override System\nPolicies" as UC61 #HotPink
+    usecase "Generate Reports" as UC62 #Pink
+  }
+  
+  ' ==================== SYSTEM SERVICES ====================
+  package "System Internal Services" #WhiteSmoke {
+    
+    usecase "Send Booking\nConfirmation Email" as UC63 #LightGray
+    usecase "Send Email\nVerification" as UC64 #LightGray
+    usecase "Send Password\nReset Email" as UC65 #LightGray
+    usecase "Send Booking\nModification Email" as UC66 #LightGray
+    usecase "Send Booking\nCancellation Email" as UC67 #LightGray
+    usecase "Process Online\nPayment" as UC68 #LightGray
+    usecase "Log Security\nEvents" as UC69 #LightGray
+    usecase "Validate Input\nData" as UC70 #LightGray
+    usecase "Apply Rate\nLimiting" as UC71 #LightGray
+    usecase "Send Notification" as UC72 #LightGray
+  }
+}
+
+' ==================== ASSOCIATIONS - GUEST USER ====================
+Guest -[#Green]-> UC1 : uses
+Guest -[#Green]-> UC3 : uses
+Guest -[#Green]-> UC5 : uses
+Guest -[#Green]-> UC7 : uses
+Guest -[#Green]-> UC9 : uses
+Guest -[#Green]-> UC11 : uses
+
+' ==================== ASSOCIATIONS - ANONYMOUS VISITOR ====================
+Anonymous -[#Green]-> UC2 : uses
+Anonymous -[#Green]-> UC4 : uses
+Anonymous -[#Green]-> UC6 : uses
+Anonymous -[#Green]-> UC8 : uses
+Anonymous -[#Green]-> UC10 : uses
+Anonymous -[#Green]-> UC27 : uses
+Anonymous -[#Green]-> UC29 : uses
+Anonymous -[#Green]-> UC34 : uses
+
+' ==================== ASSOCIATIONS - REGISTERED VISITOR ====================
+Registered -[#Green]-> UC17 : uses
+Registered -[#Green]-> UC18 : uses
+Registered -[#Green]-> UC19 : uses
+Registered -[#Green]-> UC20 : uses
+Registered -[#Green]-> UC21 : uses
+Registered -[#Green]-> UC22 : uses
+Registered -[#Green]-> UC30 : uses
+Registered -[#Green]-> UC31 : uses
+Registered -[#Green]-> UC32 : uses
+Registered -[#Green]-> UC33 : uses
+Registered -[#Green]-> UC35 : uses
+
+' ==================== ASSOCIATIONS - ADMIN ====================
+Admin -[#Green]-> UC38 : uses
+Admin -[#Green]-> UC42 : uses
+Admin -[#Green]-> UC46 : uses
+Admin -[#Green]-> UC50 : uses
+Admin -[#Green]-> UC54 : uses
+Admin -[#Green]-> UC58 : uses
+Admin -[#Green]-> UC59 : uses
+Admin -[#Green]-> UC60 : uses
+Admin -[#Green]-> UC61 : uses
+Admin -[#Green]-> UC62 : uses
+
+' ==================== INCLUDE RELATIONSHIPS ====================
+' Booking Creation includes
+UC17 .[#Blue].> UC25 : <<include>>
+UC17 .[#Blue].> UC23 : <<include>>
+UC17 .[#Blue].> UC24 : <<include>>
+UC17 .[#Blue].> UC26 : <<include>>
+UC17 .[#Blue].> UC70 : <<include>>
+UC17 .[#Blue].> UC63 : <<include>>
+
+' Booking Modification includes
+UC20 .[#Blue].> UC25 : <<include>>
+UC20 .[#Blue].> UC26 : <<include>>
+UC20 .[#Blue].> UC70 : <<include>>
+UC20 .[#Blue].> UC66 : <<include>>
+
+' Booking Cancellation includes
+UC21 .[#Blue].> UC26 : <<include>>
+UC21 .[#Blue].> UC67 : <<include>>
+
+' View Booking Details includes
+UC19 .[#Blue].> UC70 : <<include>>
+
+' Registration includes
+UC27 .[#Blue].> UC70 : <<include>>
+UC27 .[#Blue].> UC64 : <<include>>
+
+' Login includes
+UC29 .[#Blue].> UC37 : <<include>>
+UC29 .[#Blue].> UC36 : <<include>>
+UC29 .[#Blue].> UC69 : <<include>>
+
+' Logout includes
+UC30 .[#Blue].> UC36 : <<include>>
+
+' Password Change includes
+UC33 .[#Blue].> UC37 : <<include>>
+UC33 .[#Blue].> UC70 : <<include>>
+
+' Password Reset includes
+UC34 .[#Blue].> UC65 : <<include>>
+
+' Profile Update includes
+UC32 .[#Blue].> UC70 : <<include>>
+
+' Delete Account includes
+UC35 .[#Blue].> UC37 : <<include>>
+UC35 .[#Blue].> UC72 : <<include>>
+
+' Admin Booking Management includes
+UC59 .[#Blue].> UC70 : <<include>>
+UC60 .[#Blue].> UC26 : <<include>>
+
+' Content Management includes
+UC38 .[#Blue].> UC70 : <<include>>
+UC42 .[#Blue].> UC70 : <<include>>
+UC46 .[#Blue].> UC70 : <<include>>
+UC50 .[#Blue].> UC70 : <<include>>
+UC54 .[#Blue].> UC70 : <<include>>
+
+' Browse operations include search and filter
+UC1 .[#Blue].> UC11 : <<include>>
+UC1 .[#Blue].> UC12 : <<include>>
+UC3 .[#Blue].> UC11 : <<include>>
+UC3 .[#Blue].> UC12 : <<include>>
+UC5 .[#Blue].> UC11 : <<include>>
+UC7 .[#Blue].> UC11 : <<include>>
+UC9 .[#Blue].> UC11 : <<include>>
+
+' ==================== EXTEND RELATIONSHIPS ====================
+UC17 .[#Red].> UC68 : <<extend>>
+UC20 .[#Red].> UC61 : <<extend>>
+UC21 .[#Red].> UC61 : <<extend>>
+UC29 .[#Red].> UC71 : <<extend>>
+UC59 .[#Red].> UC61 : <<extend>>
+UC60 .[#Red].> UC61 : <<extend>>
+UC27 .[#Red].> UC72 : <<extend>>
+UC32 .[#Red].> UC72 : <<extend>>
+
+' ==================== EXTEND FOR CRUD OPERATIONS ====================
+UC38 .[#Red].> UC39 : <<extend>>
+UC38 .[#Red].> UC40 : <<extend>>
+UC38 .[#Red].> UC41 : <<extend>>
+
+UC42 .[#Red].> UC43 : <<extend>>
+UC42 .[#Red].> UC44 : <<extend>>
+UC42 .[#Red].> UC45 : <<extend>>
+
+UC46 .[#Red].> UC47 : <<extend>>
+UC46 .[#Red].> UC48 : <<extend>>
+UC46 .[#Red].> UC49 : <<extend>>
+
+UC50 .[#Red].> UC51 : <<extend>>
+UC50 .[#Red].> UC52 : <<extend>>
+UC50 .[#Red].> UC53 : <<extend>>
+
+UC54 .[#Red].> UC55 : <<extend>>
+UC54 .[#Red].> UC56 : <<extend>>
+UC54 .[#Red].> UC57 : <<extend>>
+
+' ==================== EXTERNAL SYSTEM ASSOCIATIONS ====================
+UC63 -[#DarkGray]-> Email : sends to
+UC64 -[#DarkGray]-> Email : sends to
+UC65 -[#DarkGray]-> Email : sends to
+UC66 -[#DarkGray]-> Email : sends to
+UC67 -[#DarkGray]-> Email : sends to
+UC72 -[#DarkGray]-> Email : sends to
+
+UC68 -[#DarkGray]-> Payment : calls
+
+@enduml

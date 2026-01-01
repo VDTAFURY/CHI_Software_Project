@@ -1,0 +1,418 @@
+@startuml Grand Egyptian Museum - Database Schema
+
+!define PRIMARY_KEY <color:#b8861b><&key></color>
+!define FOREIGN_KEY <color:#aaaaaa><&key></color>
+
+skinparam linetype ortho
+skinparam ranksep 60
+skinparam nodesep 80
+
+title **Grand Egyptian Museum Web Application - Database Schema**
+
+' ==================== USER MANAGEMENT TABLES ====================
+
+entity "users" as users {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  full_name : VARCHAR(255) <<NOT NULL>>
+  email : VARCHAR(255) <<UNIQUE, NOT NULL>>
+  password_hash : VARCHAR(255) <<NOT NULL>>
+  phone_number : VARCHAR(20)
+  nationality : VARCHAR(100)
+  account_status : ENUM('pending', 'active', 'inactive', 'suspended') <<NOT NULL, DEFAULT 'pending'>>
+  user_role : ENUM('visitor', 'admin') <<NOT NULL, DEFAULT 'visitor'>>
+  email_verified : BOOLEAN <<DEFAULT FALSE>>
+  registration_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  last_login_timestamp : DATETIME
+  --
+  INDEX idx_email (email)
+  INDEX idx_account_status (account_status)
+  INDEX idx_user_role (user_role)
+}
+
+entity "sessions" as sessions {
+  PRIMARY_KEY session_id : VARCHAR(64) <<PK>>
+  --
+  FOREIGN_KEY user_id : INT <<FK, NOT NULL>>
+  session_data : TEXT
+  ip_address : VARCHAR(45)
+  user_agent : VARCHAR(255)
+  creation_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  last_activity_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  expiration_timestamp : DATETIME <<NOT NULL>>
+  --
+  INDEX idx_user_id (user_id)
+  INDEX idx_expiration (expiration_timestamp)
+}
+
+entity "email_verification_tokens" as email_tokens {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  FOREIGN_KEY user_id : INT <<FK, UNIQUE, NOT NULL>>
+  token : VARCHAR(64) <<UNIQUE, NOT NULL>>
+  creation_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  expiration_timestamp : DATETIME <<NOT NULL>>
+  is_used : BOOLEAN <<DEFAULT FALSE>>
+  --
+  INDEX idx_token (token)
+  INDEX idx_user_id (user_id)
+}
+
+entity "password_reset_tokens" as password_tokens {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  FOREIGN_KEY user_id : INT <<FK, NOT NULL>>
+  token : VARCHAR(64) <<UNIQUE, NOT NULL>>
+  creation_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  expiration_timestamp : DATETIME <<NOT NULL>>
+  is_used : BOOLEAN <<DEFAULT FALSE>>
+  --
+  INDEX idx_token (token)
+  INDEX idx_user_id (user_id)
+}
+
+' ==================== CONTENT MANAGEMENT TABLES ====================
+
+entity "plans" as plans {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  title : VARCHAR(255) <<NOT NULL>>
+  description : TEXT <<NOT NULL>>
+  duration : INT <<NOT NULL, COMMENT 'Duration in minutes'>>
+  difficulty_level : ENUM('easy', 'moderate', 'challenging') <<NOT NULL>>
+  target_audience : VARCHAR(255)
+  accessibility_features : TEXT
+  thumbnail_image : VARCHAR(255)
+  status : ENUM('active', 'inactive') <<NOT NULL, DEFAULT 'active'>>
+  creation_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  modification_timestamp : DATETIME <<ON UPDATE CURRENT_TIMESTAMP>>
+  --
+  INDEX idx_status (status)
+  INDEX idx_difficulty (difficulty_level)
+  INDEX idx_duration (duration)
+}
+
+entity "events" as events {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  title : VARCHAR(255) <<NOT NULL>>
+  description : TEXT <<NOT NULL>>
+  event_type : ENUM('exhibition', 'workshop', 'lecture', 'performance', 'other') <<NOT NULL>>
+  start_date : DATE <<NOT NULL>>
+  end_date : DATE <<NOT NULL>>
+  start_time : TIME
+  end_time : TIME
+  location : VARCHAR(255)
+  capacity_limit : INT
+  current_registrations : INT <<DEFAULT 0>>
+  registration_required : BOOLEAN <<DEFAULT FALSE>>
+  thumbnail_image : VARCHAR(255)
+  status : ENUM('active', 'inactive', 'cancelled', 'completed') <<NOT NULL, DEFAULT 'active'>>
+  creation_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  modification_timestamp : DATETIME <<ON UPDATE CURRENT_TIMESTAMP>>
+  --
+  INDEX idx_status (status)
+  INDEX idx_event_type (event_type)
+  INDEX idx_start_date (start_date)
+  INDEX idx_end_date (end_date)
+  CHECK (end_date >= start_date)
+}
+
+entity "food_facilities" as food_facilities {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  facility_name : VARCHAR(255) <<NOT NULL>>
+  description : TEXT <<NOT NULL>>
+  cuisine_type : VARCHAR(100)
+  service_style : ENUM('restaurant', 'cafe', 'fast_food', 'food_court') <<NOT NULL>>
+  menu_highlights : TEXT
+  operating_hours : JSON <<COMMENT 'Store hours per day'>>
+  location_description : VARCHAR(255)
+  capacity : INT
+  price_range : ENUM('budget', 'moderate', 'premium') <<NOT NULL>>
+  dietary_accommodations : JSON <<COMMENT 'vegetarian, vegan, halal, etc.'>>
+  thumbnail_image : VARCHAR(255)
+  status : ENUM('active', 'inactive', 'temporarily_closed') <<NOT NULL, DEFAULT 'active'>>
+  creation_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  modification_timestamp : DATETIME <<ON UPDATE CURRENT_TIMESTAMP>>
+  --
+  INDEX idx_status (status)
+  INDEX idx_cuisine_type (cuisine_type)
+  INDEX idx_price_range (price_range)
+}
+
+entity "educational_collections" as educational_collections {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  title : VARCHAR(255) <<NOT NULL>>
+  description : TEXT <<NOT NULL>>
+  subject_area : VARCHAR(100)
+  age_recommendation : VARCHAR(50)
+  grade_level : VARCHAR(50)
+  learning_objectives : TEXT
+  curriculum_alignment : TEXT
+  content_type : ENUM('article', 'video', 'interactive', 'download', 'other') <<NOT NULL>>
+  multimedia_resources : JSON <<COMMENT 'Array of resource URLs'>>
+  thumbnail_image : VARCHAR(255)
+  status : ENUM('active', 'inactive') <<NOT NULL, DEFAULT 'active'>>
+  creation_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  modification_timestamp : DATETIME <<ON UPDATE CURRENT_TIMESTAMP>>
+  --
+  INDEX idx_status (status)
+  INDEX idx_subject_area (subject_area)
+  INDEX idx_content_type (content_type)
+}
+
+entity "kids_activities" as kids_activities {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  activity_title : VARCHAR(255) <<NOT NULL>>
+  description : TEXT <<NOT NULL>>
+  activity_type : ENUM('craft', 'game', 'storytelling', 'educational', 'other') <<NOT NULL>>
+  recommended_age_range : VARCHAR(50) <<NOT NULL>>
+  duration : INT <<COMMENT 'Duration in minutes'>>
+  schedule_info : JSON <<COMMENT 'Available times/dates'>>
+  capacity : INT
+  current_registrations : INT <<DEFAULT 0>>
+  registration_required : BOOLEAN <<DEFAULT FALSE>>
+  materials_list : TEXT
+  thumbnail_image : VARCHAR(255)
+  status : ENUM('active', 'inactive') <<NOT NULL, DEFAULT 'active'>>
+  creation_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  modification_timestamp : DATETIME <<ON UPDATE CURRENT_TIMESTAMP>>
+  --
+  INDEX idx_status (status)
+  INDEX idx_activity_type (activity_type)
+}
+
+' ==================== BOOKING MANAGEMENT TABLES ====================
+
+entity "bookings" as bookings {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  FOREIGN_KEY user_id : INT <<FK, NOT NULL>>
+  FOREIGN_KEY plan_id : INT <<FK>>
+  visit_date : DATE <<NOT NULL>>
+  time_slot : ENUM('09:00-12:00', '12:00-15:00', '15:00-18:00', '18:00-21:00') <<NOT NULL>>
+  visitor_quantity : INT <<NOT NULL>>
+  total_cost : DECIMAL(10,2) <<NOT NULL>>
+  booking_reference : VARCHAR(8) <<UNIQUE, NOT NULL>>
+  booking_status : ENUM('confirmed', 'paid', 'cancelled', 'refunded', 'completed') <<NOT NULL, DEFAULT 'confirmed'>>
+  payment_transaction_id : VARCHAR(100)
+  refund_transaction_id : VARCHAR(100)
+  special_requirements : TEXT
+  creation_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  modification_timestamp : DATETIME <<ON UPDATE CURRENT_TIMESTAMP>>
+  --
+  INDEX idx_user_id (user_id)
+  INDEX idx_plan_id (plan_id)
+  INDEX idx_booking_reference (booking_reference)
+  INDEX idx_visit_date (visit_date)
+  INDEX idx_booking_status (booking_status)
+  INDEX idx_creation_timestamp (creation_timestamp)
+  CHECK (visitor_quantity > 0)
+  CHECK (visitor_quantity <= 50)
+  CHECK (total_cost >= 0)
+}
+
+entity "capacity" as capacity {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  visit_date : DATE <<NOT NULL>>
+  time_slot : ENUM('09:00-12:00', '12:00-15:00', '15:00-18:00', '18:00-21:00') <<NOT NULL>>
+  max_capacity : INT <<NOT NULL, DEFAULT 500>>
+  booked_capacity : INT <<NOT NULL, DEFAULT 0>>
+  available_capacity : INT <<NOT NULL, DEFAULT 500>>
+  --
+  UNIQUE idx_date_slot (visit_date, time_slot)
+  INDEX idx_visit_date (visit_date)
+  CHECK (booked_capacity >= 0)
+  CHECK (available_capacity >= 0)
+  CHECK (booked_capacity <= max_capacity)
+}
+
+' ==================== REGISTRATION TABLES ====================
+
+entity "event_registrations" as event_registrations {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  FOREIGN_KEY event_id : INT <<FK, NOT NULL>>
+  FOREIGN_KEY user_id : INT <<FK, NOT NULL>>
+  registration_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  attendance_status : ENUM('registered', 'attended', 'no_show', 'cancelled') <<DEFAULT 'registered'>>
+  --
+  UNIQUE idx_event_user (event_id, user_id)
+  INDEX idx_event_id (event_id)
+  INDEX idx_user_id (user_id)
+}
+
+entity "activity_registrations" as activity_registrations {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  FOREIGN_KEY activity_id : INT <<FK, NOT NULL>>
+  FOREIGN_KEY user_id : INT <<FK, NOT NULL>>
+  child_name : VARCHAR(255)
+  child_age : INT
+  registration_timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  attendance_status : ENUM('registered', 'attended', 'no_show', 'cancelled') <<DEFAULT 'registered'>>
+  --
+  UNIQUE idx_activity_user (activity_id, user_id)
+  INDEX idx_activity_id (activity_id)
+  INDEX idx_user_id (user_id)
+}
+
+' ==================== AUDIT AND LOGGING TABLES ====================
+
+entity "audit_logs" as audit_logs {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  FOREIGN_KEY user_id : INT <<FK>>
+  action : VARCHAR(100) <<NOT NULL>>
+  entity_type : VARCHAR(50)
+  entity_id : INT
+  change_description : TEXT
+  ip_address : VARCHAR(45)
+  user_agent : VARCHAR(255)
+  timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  --
+  INDEX idx_user_id (user_id)
+  INDEX idx_action (action)
+  INDEX idx_entity_type (entity_type)
+  INDEX idx_timestamp (timestamp)
+}
+
+entity "failed_login_attempts" as failed_attempts {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  email : VARCHAR(255)
+  ip_address : VARCHAR(45) <<NOT NULL>>
+  user_agent : VARCHAR(255)
+  timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  --
+  INDEX idx_ip_address (ip_address)
+  INDEX idx_timestamp (timestamp)
+  INDEX idx_email (email)
+}
+
+entity "security_events" as security_events {
+  PRIMARY_KEY id : INT <<PK, AUTO_INCREMENT>>
+  --
+  FOREIGN_KEY user_id : INT <<FK>>
+  event_type : VARCHAR(100) <<NOT NULL>>
+  severity : ENUM('low', 'medium', 'high', 'critical') <<NOT NULL>>
+  description : TEXT
+  ip_address : VARCHAR(45)
+  user_agent : VARCHAR(255)
+  timestamp : DATETIME <<NOT NULL, DEFAULT CURRENT_TIMESTAMP>>
+  --
+  INDEX idx_user_id (user_id)
+  INDEX idx_event_type (event_type)
+  INDEX idx_severity (severity)
+  INDEX idx_timestamp (timestamp)
+}
+
+' ==================== RELATIONSHIPS ====================
+
+' User Management Relationships
+users ||--o{ sessions : "has"
+users ||--o| email_tokens : "has"
+users ||--o{ password_tokens : "has"
+
+' Booking Relationships
+users ||--o{ bookings : "creates"
+plans ||--o{ bookings : "referenced_in"
+
+' Content Relationships - Event & Activity Registrations
+users ||--o{ event_registrations : "registers_for"
+events ||--o{ event_registrations : "has"
+
+users ||--o{ activity_registrations : "registers_for"
+kids_activities ||--o{ activity_registrations : "has"
+
+' Audit Relationships
+users ||--o{ audit_logs : "generates"
+users ||--o{ security_events : "triggers"
+
+' Notes on Key Tables
+note right of users
+  **Users Table**
+  - Contains visitor and admin accounts
+  - Unique email per user
+  - password_hash encrypted using bcrypt
+  - user_role defines permissions
+  - account_status controls access
+end note
+
+note right of bookings
+  **Bookings Table**
+  - Unique booking_reference (8 characters)
+  - visitor_quantity between 1 and 50
+  - Links to user and plan
+  - Tracks payment and refund status
+  - modification_timestamp for tracking
+end note
+
+note right of capacity
+  **Capacity Table**
+  - Manages capacity per day and slot
+  - max_capacity maximum (default 500)
+  - booked_capacity reserved
+  - available_capacity remaining
+  - UNIQUE on (visit_date, time_slot)
+end note
+
+note right of sessions
+  **Sessions Table**
+  - Unique session_id (64 characters)
+  - expiration_timestamp for security
+  - Stores IP and User Agent
+  - Auto-cleanup on expiration
+end note
+
+note bottom of audit_logs
+  **Audit Logs**
+  - Records all critical actions
+  - Stores IP Address for security
+  - Tracks changes to entities
+  - Indexed for fast queries
+end note
+
+note bottom of email_tokens
+  **Verification Tokens**
+  - 24-hour validity
+  - One-to-one relationship with user
+  - is_used prevents reuse
+end note
+
+note bottom of password_tokens
+  **Password Reset Tokens**
+  - 1-hour validity
+  - User can have multiple tokens
+  - is_used prevents reuse
+end note
+
+' Database Information
+legend top right
+  **Database Information**
+  |= Engine |= MySQL 8.0+ / MariaDB 10.5+ |
+  |= Encoding |= utf8mb4_unicode_ci |
+  |= Storage Engine |= InnoDB |
+  |= Transactions |= Enabled (ACID) |
+  
+  **Conventions:**
+  <color:#b8861b><&key></color> Primary Key (PK)
+  <color:#aaaaaa><&key></color> Foreign Key (FK)
+  
+  **Relationship Types:**
+  ||--o{ : One to Many
+  ||--|| : One to One
+  ||--o| : One to Zero or One
+  
+  **Indexes:**
+  - All primary keys automatically indexed
+  - Foreign keys indexed
+  - Columns used in WHERE indexed
+  - UNIQUE indexes prevent duplicates
+end legend
+
+@enduml

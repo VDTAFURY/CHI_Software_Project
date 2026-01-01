@@ -1,0 +1,258 @@
+@startuml Grand Egyptian Museum - Activity Diagram (Admin Manage Content)
+
+skinparam activityBackgroundColor Lavender
+skinparam activityBorderColor Purple
+skinparam activityDiamondBackgroundColor LightYellow
+skinparam activityDiamondBorderColor DarkOrange
+skinparam activityStartColor Green
+skinparam activityEndColor Red
+skinparam swimlaneBackgroundColor AliceBlue
+
+title **Admin Content Management Process**
+
+|Admin|
+start
+:Login as Administrator;
+
+:Navigate to Admin Dashboard;
+
+|System|
+:Verify Admin Role;
+
+if (User is Admin?) then (yes)
+  |Admin|
+  :Select Content Type
+  - Plans
+  - Events
+  - Food Facilities
+  - Collections
+  - Activities;
+  
+  :Choose Action;
+  
+  if (Action Type?) then (Create)
+    :Display Creation Form;
+    
+    :Fill Content Details
+    - Title
+    - Description
+    - Images
+    - Specific Fields;
+    
+    :Submit Form;
+    
+    |System|
+    :Validate Input Data;
+    
+    if (Data Valid?) then (yes)
+      if (File Upload?) then (yes)
+        :Validate File
+        - Type
+        - Size (< 5MB)
+        - Extension;
+        
+        if (File Valid?) then (yes)
+          :Generate Unique Filename;
+          
+          :Upload File
+          Store outside web root;
+        else (no)
+          |Admin|
+          :Display File Error;
+          stop
+        endif
+      endif
+      
+      |System|
+      :Create Content Record
+      Status: Active;
+      
+      :Log Admin Action
+      Create + Content ID;
+      
+      |Admin|
+      :Display Success
+      "Content created successfully";
+      stop
+      
+    else (no)
+      |Admin|
+      :Display Validation Errors;
+      stop
+    endif
+    
+  elseif (Action Type?) then (Update)
+    :Select Content to Update;
+    
+    |System|
+    :Retrieve Content Details;
+    
+    |Admin|
+    :Display Edit Form
+    with current data;
+    
+    :Modify Content;
+    
+    :Submit Changes;
+    
+    |System|
+    :Validate Updated Data;
+    
+    if (Data Valid?) then (yes)
+      :Update Content Record;
+      
+      :Update Modification Timestamp;
+      
+      :Log Admin Action
+      Update + Content ID + Changes;
+      
+      |Admin|
+      :Display Success
+      "Content updated successfully";
+      stop
+      
+    else (no)
+      |Admin|
+      :Display Validation Errors;
+      stop
+    endif
+    
+  else (Delete)
+    :Select Content to Delete;
+    
+    |System|
+    :Check Dependencies;
+    
+    if (Has Dependencies?) then (yes)
+      |Admin|
+      :Display Warning
+      "Content linked to bookings";
+      
+      :Confirm Soft Delete?;
+      
+      if (Confirmed?) then (yes)
+        |System|
+        :Soft Delete Content
+        Status: Inactive;
+        
+        :Log Admin Action
+        Soft Delete + Content ID;
+        
+        |Admin|
+        :Display Success
+        "Content deactivated";
+        stop
+      else (no)
+        :Cancel Operation;
+        stop
+      endif
+      
+    else (no)
+      |Admin|
+      :Confirm Hard Delete?
+      "Are you sure?";
+      
+      if (Confirmed?) then (yes)
+        |System|
+        :Delete Content Record
+        Permanent removal;
+        
+        :Delete Associated Files;
+        
+        :Log Admin Action
+        Hard Delete + Content ID;
+        
+        |Admin|
+        :Display Success
+        "Content deleted permanently";
+        stop
+      else (no)
+        :Cancel Operation;
+        stop
+      endif
+    endif
+  endif
+  
+else (no)
+  |Admin|
+  :Display Authorization Error
+  "You don't have admin privileges";
+  
+  :Redirect to Home;
+  stop
+endif
+
+@enduml
+@startuml Grand Egyptian Museum - Activity Diagram (Browse and View Plans)
+
+skinparam activityBackgroundColor PaleGreen
+skinparam activityBorderColor DarkGreen
+skinparam activityDiamondBackgroundColor LightYellow
+skinparam activityDiamondBorderColor DarkOrange
+skinparam activityStartColor Green
+skinparam activityEndColor Red
+
+title **Browse and View Museum Plans**
+
+start
+:User Visits Website;
+
+:Navigate to Plans Section;
+
+:System Retrieves Active Plans
+Status = Active;
+
+:Display Plans Grid
+- Thumbnail Image
+- Title
+- Duration
+- Short Description;
+
+fork
+  :Apply Filters (Optional)
+  - Duration Range
+  - Difficulty Level
+  - Target Audience;
+fork again
+  :Apply Sorting (Optional)
+  - By Title (A-Z)
+  - By Duration
+  - By Date;
+end fork
+
+:System Updates Display
+Based on filters/sorting;
+
+:User Selects Plan;
+
+:System Retrieves Full Plan Details;
+
+:Display Plan Details Page
+- Full Description
+- Complete Itinerary
+- Duration & Difficulty
+- Accessibility Features
+- Target Audience
+- Recommendations
+- Related Images;
+
+if (User Authenticated?) then (yes)
+  :Display "Book Now" Button;
+  
+  if (User Clicks Book?) then (yes)
+    :Redirect to Booking Page
+    with selected plan pre-filled;
+    stop
+  else (no)
+    :User Continues Browsing;
+    stop
+  endif
+  
+else (no)
+  :Display "Login to Book" Message;
+  
+  :User Can View Only;
+  stop
+endif
+
+@enduml

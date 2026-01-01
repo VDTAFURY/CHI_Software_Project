@@ -1,0 +1,811 @@
+@startuml Booking State Diagram
+
+skinparam state {
+  BackgroundColor LightBlue
+  BorderColor DarkBlue
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **Booking Lifecycle State Diagram\n(مخطط حالات دورة حياة الحجز)**
+
+[*] --> Draft : User starts booking\n(المستخدم يبدأ الحجز)
+
+state "Draft\n(مسودة)" as Draft
+state "Confirmed\n(مؤكد)" as Confirmed
+state "Paid\n(مدفوع)" as Paid
+state "Completed\n(مكتمل)" as Completed
+state "Cancelled\n(ملغي)" as Cancelled
+state "Refunded\n(مسترد)" as Refunded
+
+Draft --> Confirmed : Submit booking\n(إرسال الحجز)\n[capacity available]
+
+Draft --> [*] : User abandons\n(المستخدم يتخلى)
+
+Confirmed --> Paid : Payment successful\n(الدفع ناجح)\n[payment gateway confirms]
+
+Confirmed --> Confirmed : Modify booking\n(تعديل الحجز)\n[> 24 hours before visit]
+
+Confirmed --> Cancelled : Cancel booking\n(إلغاء الحجز)\n[> 48 hours before visit]
+
+Confirmed --> Cancelled : Admin cancels\n(المسؤول يلغي)\n[policy override]
+
+Confirmed --> Completed : Visit date passed\n(تاريخ الزيارة مر)\n[visit completed]
+
+Paid --> Paid : Modify booking\n(تعديل الحجز)\n[> 24 hours before visit]
+
+Paid --> Cancelled : Cancel booking\n(إلغاء الحجز)\n[> 48 hours before visit]
+
+Paid --> Cancelled : Admin cancels\n(المسؤول يلغي)\n[policy override]
+
+Paid --> Completed : Visit date passed\n(تاريخ الزيارة مر)\n[visit completed]
+
+Cancelled --> Refunded : Refund processed\n(الاسترداد معالج)\n[payment was made]
+
+Cancelled --> [*] : No refund needed\n(لا حاجة لاسترداد)\n[no payment made]
+
+Refunded --> [*] : Booking archived\n(الحجز مؤرشف)
+
+Completed --> [*] : Booking archived\n(الحجز مؤرشف)
+
+note right of Draft
+  **حالة المسودة:**
+  - تم اختيار التاريخ والوقت
+  - لم يتم التأكيد بعد
+  - يمكن التعديل بحرية
+  - قد يتم التخلي عنه
+end note
+
+note right of Confirmed
+  **حالة المؤكد:**
+  - تم حجز السعة
+  - تم توليد رقم مرجعي
+  - إرسال بريد التأكيد
+  - يمكن التعديل (> 24 ساعة)
+  - يمكن الإلغاء (> 48 ساعة)
+  - في انتظار الدفع (اختياري)
+end note
+
+note right of Paid
+  **حالة المدفوع:**
+  - تم الدفع بنجاح
+  - حفظ معرف المعاملة
+  - يمكن التعديل (> 24 ساعة)
+  - يمكن الإلغاء مع استرداد (> 48 ساعة)
+end note
+
+note bottom of Cancelled
+  **حالة الملغي:**
+  - تم تحرير السعة المحجوزة
+  - إرسال بريد الإلغاء
+  - تسجيل في Audit Log
+  - إذا تم الدفع → استرداد
+  - إذا لم يتم الدفع → أرشفة
+end note
+
+note bottom of Completed
+  **حالة المكتمل:**
+  - تاريخ الزيارة انتهى
+  - الخدمة تم تقديمها
+  - لا يمكن التعديل أو الإلغاء
+  - جاهز للأرشفة
+end note
+
+note bottom of Refunded
+  **حالة المسترد:**
+  - تم معالجة الاسترداد
+  - حفظ معرف معاملة الاسترداد
+  - إرسال إشعار الاسترداد
+  - جاهز للأرشفة
+end note
+
+legend right
+  **الانتقالات:**
+  • الخط الأسود: انتقال عادي
+  • [شرط]: شرط الانتقال
+  • (نص): الحدث المسبب
+  
+  **القيود الزمنية:**
+  • التعديل: > 24 ساعة قبل الزيارة
+  • الإلغاء: > 48 ساعة قبل الزيارة
+  • تجاوز المسؤول: في أي وقت
+end legend
+
+@enduml
+
+@startuml User Account State Diagram
+
+skinparam state {
+  BackgroundColor LightCyan
+  BorderColor DarkBlue
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **User Account Lifecycle State Diagram\n(مخطط حالات دورة حياة حساب المستخدم)**
+
+[*] --> Unregistered : User visits website\n(المستخدم يزور الموقع)
+
+state "Unregistered\n(غير مسجل)" as Unregistered
+state "Pending Verification\n(في انتظار التحقق)" as Pending
+state "Active\n(نشط)" as Active
+state "Inactive\n(غير نشط)" as Inactive
+state "Suspended\n(موقوف)" as Suspended
+state "Deleted\n(محذوف)" as Deleted
+
+Unregistered --> Pending : Register account\n(تسجيل حساب)\n[valid registration data]
+
+Pending --> Active : Verify email\n(التحقق من البريد)\n[token valid & not expired]
+
+Pending --> Deleted : Verification expired\n(انتهت صلاحية التحقق)\n[> 7 days no verification]
+
+Pending --> Deleted : User requests deletion\n(المستخدم يطلب الحذف)
+
+Active --> Inactive : User deactivates\n(المستخدم يعطل)\n[user request]
+
+Active --> Suspended : Admin suspends\n(المسؤول يوقف)\n[policy violation]
+
+Active --> Deleted : User deletes account\n(المستخدم يحذف الحساب)\n[user request]
+
+Active --> Active : Login\n(تسجيل دخول)\n[valid credentials]
+
+Active --> Active : Update profile\n(تحديث الملف)\n[valid data]
+
+Active --> Active : Change password\n(تغيير كلمة المرور)\n[valid old password]
+
+Active --> Active : Create booking\n(إنشاء حجز)\n[valid booking data]
+
+Inactive --> Active : User reactivates\n(المستخدم يعيد التفعيل)\n[user request]
+
+Inactive --> Deleted : Admin deletes\n(المسؤول يحذف)\n[> 365 days inactive]
+
+Suspended --> Active : Admin reinstates\n(المسؤول يعيد)\n[issue resolved]
+
+Suspended --> Deleted : Admin deletes permanently\n(المسؤول يحذف نهائياً)\n[severe violation]
+
+Deleted --> [*] : Account purged\n(الحساب محذوف)\n[after 30 days]
+
+note right of Unregistered
+  **حالة غير مسجل:**
+  - زائر مجهول
+  - يمكن تصفح المحتوى
+  - لا يمكن الحجز
+  - لا يمكن التسجيل في الفعاليات
+end note
+
+note right of Pending
+  **حالة في انتظار التحقق:**
+  - تم إنشاء الحساب
+  - لم يتم التحقق من البريد
+  - صلاحية رمز التحقق 24 ساعة
+  - إذا لم يتم التحقق خلال 7 أيام → حذف
+  - لا يمكن تسجيل الدخول
+end note
+
+note right of Active
+  **حالة نشط:**
+  - تم التحقق من البريد
+  - يمكن تسجيل الدخول
+  - يمكن الحجز
+  - يمكن التسجيل في الفعاليات
+  - يمكن تحديث الملف الشخصي
+  - جميع المميزات متاحة
+end note
+
+note bottom of Inactive
+  **حالة غير نشط:**
+  - تم تعطيل الحساب مؤقتاً
+  - بطلب من المستخدم
+  - لا يمكن تسجيل الدخول
+  - البيانات محفوظة
+  - يمكن إعادة التفعيل
+  - حذف تلقائي بعد 365 يوم
+end note
+
+note bottom of Suspended
+  **حالة موقوف:**
+  - تم الإيقاف من قبل المسؤول
+  - بسبب انتهاك السياسات
+  - لا يمكن تسجيل الدخول
+  - البيانات محفوظة
+  - يمكن إعادة التفعيل من المسؤول
+  - قد يتم الحذف النهائي
+end note
+
+note bottom of Deleted
+  **حالة محذوف:**
+  - تم وضع علامة للحذف
+  - فترة سماح 30 يوم
+  - البيانات مخفية
+  - يمكن الاسترجاع خلال 30 يوم
+  - بعد 30 يوم → حذف نهائي
+end note
+
+legend right
+  **أسباب الانتقال:**
+  • تسجيل: اختياري
+  • تحقق: مطلوب
+  • إيقاف: انتهاك سياسات
+  • حذف: طلب مستخدم أو نظام
+  
+  **الفترات الزمنية:**
+  • رمز التحقق: 24 ساعة
+  • حذف غير محقق: 7 أيام
+  • حذف غير نشط: 365 يوم
+  • فترة سماح الحذف: 30 يوم
+end legend
+
+@enduml
+
+@startuml Event Registration State Diagram
+
+skinparam state {
+  BackgroundColor LightYellow
+  BorderColor DarkOrange
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **Event Registration Lifecycle State Diagram\n(مخطط حالات دورة حياة تسجيل الفعالية)**
+
+[*] --> Browsing : User views events\n(المستخدم يتصفح الفعاليات)
+
+state "Browsing\n(تصفح)" as Browsing
+state "Registered\n(مسجل)" as Registered
+state "Confirmed\n(مؤكد)" as Confirmed
+state "Attended\n(حضر)" as Attended
+state "No Show\n(لم يحضر)" as NoShow
+state "Cancelled\n(ملغي)" as Cancelled
+
+Browsing --> Registered : Register for event\n(التسجيل في الفعالية)\n[capacity available]\n[registration required]
+
+Browsing --> Confirmed : Direct attendance\n(حضور مباشر)\n[no registration required]
+
+Browsing --> [*] : User leaves\n(المستخدم يغادر)
+
+Registered --> Confirmed : Event organizer confirms\n(منظم الفعالية يؤكد)\n[manual confirmation]
+
+Registered --> Cancelled : User cancels\n(المستخدم يلغي)\n[before event date]
+
+Registered --> Cancelled : Event cancelled\n(الفعالية ملغاة)\n[event status = cancelled]
+
+Registered --> Attended : User attends\n(المستخدم يحضر)\n[check-in at event]
+
+Registered --> NoShow : Event completed\n(الفعالية انتهت)\n[user didn't attend]
+
+Confirmed --> Attended : User attends\n(المستخدم يحضر)\n[check-in at event]
+
+Confirmed --> NoShow : Event completed\n(الفعالية انتهت)\n[user didn't attend]
+
+Confirmed --> Cancelled : User cancels\n(المستخدم يلغي)\n[before event date]
+
+Confirmed --> Cancelled : Event cancelled\n(الفعالية ملغاة)\n[event status = cancelled]
+
+Attended --> [*] : Registration archived\n(التسجيل مؤرشف)
+
+NoShow --> [*] : Registration archived\n(التسجيل مؤرشف)
+
+Cancelled --> [*] : Registration archived\n(التسجيل مؤرشف)
+
+note right of Browsing
+  **حالة التصفح:**
+  - المستخدم يتصفح الفعاليات
+  - يمكن تصفية الفعاليات
+  - عرض التفاصيل
+  - فحص التوفر
+end note
+
+note right of Registered
+  **حالة مسجل:**
+  - تم التسجيل في الفعالية
+  - تقليل السعة المتاحة
+  - إرسال بريد التأكيد
+  - في انتظار الفعالية
+  - يمكن الإلغاء قبل الموعد
+end note
+
+note right of Confirmed
+  **حالة مؤكد:**
+  - تم تأكيد الحضور
+  - (للفعاليات التي تحتاج تأكيد يدوي)
+  - أو حضور مباشر بدون تسجيل
+  - جاهز للحضور
+end note
+
+note bottom of Attended
+  **حالة حضر:**
+  - تم check-in في الفعالية
+  - تم تسجيل الحضور
+  - زيادة عداد الحاضرين
+  - جاهز للأرشفة
+end note
+
+note bottom of NoShow
+  **حالة لم يحضر:**
+  - الفعالية انتهت
+  - المستخدم لم يحضر
+  - تسجيل عدم الحضور
+  - تحرير السعة (للفعاليات القادمة)
+  - جاهز للأرشفة
+end note
+
+note bottom of Cancelled
+  **حالة ملغي:**
+  - التسجيل ملغى
+  - قد يكون من المستخدم
+  - أو بسبب إلغاء الفعالية
+  - تحرير السعة
+  - إرسال إشعار الإلغاء
+  - جاهز للأرشفة
+end note
+
+legend right
+  **أنواع الفعاليات:**
+  • مع تسجيل: يحتاج تسجيل مسبق
+  • بدون تسجيل: حضور مباشر
+  
+  **التأكيدات:**
+  • يدوي: يحتاج موافقة المنظم
+  • تلقائي: مباشرة بعد التسجيل
+  
+  **السعة:**
+  • تقل عند التسجيل
+  • تزيد عند الإلغاء
+  • ثابتة عند الحضور/عدم الحضور
+end legend
+
+@enduml
+
+@startuml Session State Diagram
+
+skinparam state {
+  BackgroundColor LightGreen
+  BorderColor DarkGreen
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **Session Lifecycle State Diagram\n(مخطط حالات دورة حياة الجلسة)**
+
+[*] --> NoSession : User not logged in\n(المستخدم غير مسجل دخول)
+
+state "No Session\n(لا جلسة)" as NoSession
+state "Active\n(نشطة)" as Active
+state "Idle\n(خاملة)" as Idle
+state "Expired\n(منتهية)" as Expired
+state "Terminated\n(منهية)" as Terminated
+
+NoSession --> Active : Successful login\n(تسجيل دخول ناجح)\n[valid credentials]
+
+Active --> Active : User activity\n(نشاط المستخدم)\n[page request, API call]
+
+Active --> Idle : No activity\n(لا نشاط)\n[> 15 minutes]
+
+Active --> Terminated : User logout\n(المستخدم يسجل خروج)\n[manual logout]
+
+Active --> Expired : Session timeout\n(انتهاء وقت الجلسة)\n[> 24 hours from creation]
+
+Active --> Terminated : Security event\n(حدث أمني)\n[suspicious activity detected]
+
+Active --> Terminated : Password changed\n(تغيير كلمة المرور)\n[all sessions invalidated]
+
+Idle --> Active : User returns\n(المستخدم يعود)\n[user activity resumed]
+
+Idle --> Expired : Idle timeout\n(انتهاء وقت الخمول)\n[> 30 minutes idle]
+
+Idle --> Terminated : User logout\n(المستخدم يسجل خروج)\n[manual logout]
+
+Expired --> [*] : Session cleaned up\n(تنظيف الجلسة)\n[removed from database]
+
+Terminated --> [*] : Session cleaned up\n(تنظيف الجلسة)\n[removed from database]
+
+note right of NoSession
+  **حالة لا جلسة:**
+  - لا توجد جلسة نشطة
+  - المستخدم غير مسجل دخول
+  - يمكن تصفح المحتوى العام
+  - لا يمكن الوصول للمميزات المحمية
+end note
+
+note right of Active
+  **حالة نشطة:**
+  - الجلسة نشطة وصالحة
+  - تحديث last_activity_timestamp
+  - يمكن الوصول لجميع المميزات
+  - Session cookie صالح
+  - تتبع IP و User Agent
+end note
+
+note right of Idle
+  **حالة خاملة:**
+  - لا نشاط لمدة 15 دقيقة
+  - الجلسة لا تزال صالحة
+  - يمكن العودة بدون إعادة تسجيل
+  - إذا استمر الخمول → انتهاء
+end note
+
+note bottom of Expired
+  **حالة منتهية:**
+  - انتهى وقت الجلسة
+  - قد يكون بسبب:
+    • مرور 24 ساعة من الإنشاء
+    • خمول لأكثر من 30 دقيقة
+  - حذف من قاعدة البيانات
+  - يحتاج إعادة تسجيل دخول
+end note
+
+note bottom of Terminated
+  **حالة منهية:**
+  - إنهاء يدوي للجلسة
+  - قد يكون بسبب:
+    • تسجيل خروج يدوي
+    • حدث أمني مشبوه
+    • تغيير كلمة المرور
+    • إيقاف الحساب
+  - حذف من قاعدة البيانات
+  - إلغاء Session cookie
+end note
+
+legend right
+  **الفترات الزمنية:**
+  • نشاط → خامل: 15 دقيقة
+  • خامل → منتهي: 30 دقيقة
+  • إنشاء → منتهي: 24 ساعة
+  
+  **إجراءات الأمان:**
+  • تسجيل IP Address
+  • تسجيل User Agent
+  • رصد الأنشطة المشبوهة
+  • إنهاء جميع الجلسات عند تغيير كلمة المرور
+  
+  **التنظيف:**
+  • حذف الجلسات المنتهية تلقائياً
+  • تنظيف دوري كل ساعة
+end legend
+
+@enduml
+
+@startuml Payment Transaction State Diagram
+
+skinparam state {
+  BackgroundColor LightSalmon
+  BorderColor DarkRed
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **Payment Transaction State Diagram\n(مخطط حالات معاملة الدفع)**
+
+[*] --> Pending : Initiate payment\n(بدء الدفع)\n[booking created]
+
+state "Pending\n(في الانتظار)" as Pending
+state "Processing\n(قيد المعالجة)" as Processing
+state "Authorized\n(مصرح)" as Authorized
+state "Completed\n(مكتمل)" as Completed
+state "Failed\n(فاشل)" as Failed
+state "Refund Pending\n(استرداد في الانتظار)" as RefundPending
+state "Refunded\n(مسترد)" as Refunded
+state "Cancelled\n(ملغي)" as Cancelled
+
+Pending --> Processing : User submits payment\n(المستخدم يرسل الدفع)\n[payment details entered]
+
+Pending --> Cancelled : User cancels\n(المستخدم يلغي)\n[timeout or manual cancel]
+
+Processing --> Authorized : Payment gateway authorizes\n(بوابة الدفع تصرح)\n[funds available]
+
+Processing --> Failed : Payment gateway rejects\n(بوابة الدفع ترفض)\n[insufficient funds, invalid card]
+
+Authorized --> Completed : Capture successful\n(الالتقاط ناجح)\n[funds captured]
+
+Authorized --> Failed : Capture failed\n(الالتقاط فشل)\n[technical error]
+
+Completed --> RefundPending : Refund requested\n(طلب استرداد)\n[booking cancelled]
+
+RefundPending --> Refunded : Refund successful\n(استرداد ناجح)\n[refund processed]
+
+RefundPending --> Failed : Refund failed\n(استرداد فاشل)\n[technical error]
+
+Failed --> [*] : Transaction closed\n(المعاملة مغلقة)
+
+Cancelled --> [*] : Transaction closed\n(المعاملة مغلقة)
+
+Completed --> [*] : Transaction archived\n(المعاملة مؤرشفة)\n[no refund needed]
+
+Refunded --> [*] : Transaction archived\n(المعاملة مؤرشفة)
+
+note right of Pending
+  **حالة في الانتظار:**
+  - تم إنشاء الحجز
+  - في انتظار إدخال بيانات الدفع
+  - مهلة: 15 دقيقة
+  - لم يتم الاتصال ببوابة الدفع
+end note
+
+note right of Processing
+  **حالة قيد المعالجة:**
+  - تم إرسال البيانات لبوابة الدفع
+  - فحص صحة البطاقة
+  - فحص الرصيد المتاح
+  - إنشاء رمز المعاملة
+end note
+
+note right of Authorized
+  **حالة مصرح:**
+  - تم التصريح بالدفع
+  - حجز المبلغ من البطاقة
+  - لم يتم الالتقاط بعد
+  - صالحة لمدة محددة
+end note
+
+note right of Completed
+  **حالة مكتمل:**
+  - تم التقاط الأموال بنجاح
+  - تحديث حالة الحجز إلى "paid"
+  - حفظ transaction_id
+  - إرسال إيصال
+  - يمكن الاسترداد إذا لزم
+end note
+
+note bottom of Failed
+  **حالة فاشل:**
+  - فشلت المعاملة
+  - أسباب محتملة:
+    • رصيد غير كافٍ
+    • بطاقة غير صالحة
+    • خطأ تقني
+    • رفض من البنك
+  - إلغاء الحجز (إذا لزم)
+  - تحرير السعة
+end note
+
+note bottom of RefundPending
+  **حالة استرداد في الانتظار:**
+  - طلب استرداد مقدم
+  - الاتصال ببوابة الدفع
+  - معالجة الاسترداد
+  - قد يستغرق 3-5 أيام عمل
+end note
+
+note bottom of Refunded
+  **حالة مسترد:**
+  - تم الاسترداد بنجاح
+  - حفظ refund_transaction_id
+  - تحديث حالة الحجز إلى "refunded"
+  - إرسال إشعار الاسترداد
+  - جاهز للأرشفة
+end note
+
+legend right
+  **بوابات الدفع المدعومة:**
+  • بطاقات الائتمان/الخصم
+  • PayPal (اختياري)
+  • الدفع عند الزيارة
+  
+  **المهل الزمنية:**
+  • Pending → Cancelled: 15 دقيقة
+  • Processing: 30 ثانية - 2 دقيقة
+  • Refund: 3-5 أيام عمل
+  
+  **الأمان:**
+  • PCI DSS Compliant
+  • Tokenization للبطاقات
+  • 3D Secure (اختياري)
+  • Fraud detection
+end legend
+
+@enduml
+
+@startuml Email Verification Token State Diagram
+
+skinparam state {
+  BackgroundColor Lavender
+  BorderColor Purple
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **Email Verification Token State Diagram\n(مخطط حالات رمز التحقق من البريد)**
+
+[*] --> Generated : Token created\n(إنشاء الرمز)\n[user registers]
+
+state "Generated\n(تم التوليد)" as Generated
+state "Sent\n(تم الإرسال)" as Sent
+state "Used\n(مستخدم)" as Used
+state "Expired\n(منتهي)" as Expired
+
+Generated --> Sent : Email sent\n(إرسال البريد)\n[SMTP successful]
+
+Generated --> Generated : Resend requested\n(طلب إعادة إرسال)\n[generate new token]
+
+Sent --> Used : User clicks link\n(المستخدم يضغط الرابط)\n[token valid & not expired]
+
+Sent --> Expired : Time elapsed\n(مر الوقت)\n[> 24 hours]
+
+Sent --> Sent : Resend requested\n(طلب إعادة إرسال)\n[generate new token]
+
+Used --> [*] : Account activated\n(الحساب مفعل)
+
+Expired --> Generated : New token requested\n(طلب رمز جديد)\n[user requests new verification]
+
+Expired --> [*] : Account deleted\n(الحساب محذوف)\n[> 7 days no verification]
+
+note right of Generated
+  **حالة تم التوليد:**
+  - تم إنشاء رمز فريد (32 حرف)
+  - حفظ في قاعدة البيانات
+  - ربط مع user_id
+  - صلاحية 24 ساعة
+  - جاهز للإرسال
+end note
+
+note right of Sent
+  **حالة تم الإرسال:**
+  - تم إرسال البريد بنجاح
+  - البريد يحتوي على رابط التحقق
+  - في انتظار نقر المستخدم
+  - يمكن طلب إعادة إرسال
+  - صالح لمدة 24 ساعة
+end note
+
+note bottom of Used
+  **حالة مستخدم:**
+  - تم النقر على الرابط
+  - تم التحقق من صحة الرمز
+  - تفعيل حساب المستخدم
+  - تحديث is_used = true
+  - لا يمكن استخدامه مرة أخرى
+end note
+
+note bottom of Expired
+  **حالة منتهي:**
+  - مر 24 ساعة من التوليد
+  - لم يتم استخدام الرمز
+  - لا يمكن استخدامه للتحقق
+  - يمكن طلب رمز جديد
+  - إذا مر 7 أيام → حذف الحساب
+end note
+
+legend right
+  **الفترات الزمنية:**
+  • صلاحية الرمز: 24 ساعة
+  • حذف الحساب: 7 أيام بدون تحقق
+  
+  **الأمان:**
+  • رمز عشوائي آمن (cryptographically secure)
+  • استخدام لمرة واحدة فقط
+  • HTTPS للروابط
+  • حفظ hash في بعض التطبيقات
+  
+  **إعادة الإرسال:**
+  • يولد رمز جديد
+  • إبطال الرمز القديم
+  • حد أقصى 3 مرات في الساعة
+end legend
+
+@enduml
+
+@startuml Content Moderation State Diagram
+
+skinparam state {
+  BackgroundColor Wheat
+  BorderColor Brown
+  ArrowColor Black
+  StartColor Green
+  EndColor Red
+}
+
+title **Content Moderation State Diagram\n(مخطط حالات إدارة المحتوى)**
+
+[*] --> Draft : Admin creates content\n(المسؤول ينشئ محتوى)
+
+state "Draft\n(مسودة)" as Draft
+state "Active\n(نشط)" as Active
+state "Inactive\n(غير نشط)" as Inactive
+state "Under Review\n(قيد المراجعة)" as Review
+state "Archived\n(مؤرشف)" as Archived
+
+Draft --> Active : Publish content\n(نشر المحتوى)\n[all required fields filled]
+
+Draft --> Draft : Save draft\n(حفظ المسودة)\n[auto-save or manual]
+
+Draft --> Archived : Discard draft\n(تجاهل المسودة)\n[delete permanently]
+
+Active --> Active : Update content\n(تحديث المحتوى)\n[edit published content]
+
+Active --> Inactive : Deactivate\n(تعطيل)\n[temporary removal]
+
+Active --> Review : Flag for review\n(وضع علامة للمراجعة)\n[quality check or complaint]
+
+Active --> Archived : Archive content\n(أرشفة المحتوى)\n[no longer relevant]
+
+Inactive --> Active : Reactivate\n(إعادة تفعيل)\n[admin decision]
+
+Inactive --> Archived : Archive inactive\n(أرشفة غير النشط)\n[no longer needed]
+
+Review --> Active : Approve\n(موافقة)\n[review passed]
+
+Review --> Inactive : Reject\n(رفض)\n[needs modifications]
+
+Review --> Archived : Remove permanently\n(حذف نهائي)\n[violates policies]
+
+Archived --> [*] : Purge content\n(حذف المحتوى)\n[after retention period]
+
+note right of Draft
+  **حالة مسودة:**
+  - محتوى قيد الإنشاء
+  - غير مرئي للمستخدمين
+  - يمكن التعديل بحرية
+  - حفظ تلقائي
+  - يمكن نشره أو حذفه
+end note
+
+note right of Active
+  **حالة نشط:**
+  - المحتوى منشور
+  - مرئي للمستخدمين
+  - يظهر في نتائج البحث
+  - يمكن التعديل
+  - يمكن التعطيل أو الأرشفة
+  - تتبع المشاهدات والتفاعلات
+end note
+
+note right of Inactive
+  **حالة غير نشط:**
+  - محتوى معطل مؤقتاً
+  - غير مرئي للمستخدمين
+  - لا يظهر في نتائج البحث
+  - البيانات محفوظة
+  - يمكن إعادة التفعيل
+  - أسباب التعطيل:
+    • حجوزات مرتبطة
+    • تحديث قادم
+    • مراجعة دورية
+end note
+
+note bottom of Review
+  **حالة قيد المراجعة:**
+  - محتوى تحت المراجعة
+  - قد يكون بسبب:
+    • فحص الجودة
+    • شكوى مستخدم
+    • مراجعة دورية
+  - غير مرئي مؤقتاً
+  - في انتظار قرار المسؤول
+end note
+
+note bottom of Archived
+  **حالة مؤرشف:**
+  - محتوى مؤرشف
+  - غير نشط بشكل دائم
+  - البيانات محفوظة للسجل
+  - لا يمكن إعادة التفعيل
+  - حذف نهائي بعد فترة الاحتفاظ
+  - يستخدم للإحصائيات التاريخية
+end note
+
+legend right
+  **أنواع المحتوى:**
+  • Plans (خطط الزيارة)
+  • Events (الفعاليات)
+  • Food Facilities (المطاعم)
+  • Educational Collections (المحتوى التعليمي)
+  • Kids Activities (أنشطة الأطفال)
+  
+  **فترة الاحتفاظ:**
+  • Active: غير محدودة
+  • Inactive: 90 يوم ثم أرشفة
+  • Archived: 2 سنوات ثم حذف نهائي
+  
+  **المراجعة:**
+  • دورية: كل 6 أشهر
+  • عند الشكوى: فورية
+  • قبل الأحداث الكبرى: استباقية
+end legend
+
+@enduml

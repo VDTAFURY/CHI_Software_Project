@@ -1,0 +1,691 @@
+@startuml Grand Egyptian Museum - Activity Diagram (User Registration)
+
+skinparam activityBackgroundColor LightBlue
+skinparam activityBorderColor DarkBlue
+skinparam activityDiamondBackgroundColor LightYellow
+skinparam activityDiamondBorderColor DarkOrange
+skinparam activityStartColor Green
+skinparam activityEndColor Red
+skinparam activityBarColor Purple
+skinparam swimlaneBackgroundColor AliceBlue
+
+title **User Registration Process**
+
+|User|
+start
+:Navigate to Registration Page;
+
+:Fill Registration Form
+- Full Name
+- Email
+- Password
+- Phone Number
+- Nationality;
+
+:Submit Form;
+
+|System|
+:Receive Registration Data;
+
+:Validate Input Data;
+
+if (Is Data Valid?) then (yes)
+  :Check Email Uniqueness;
+  
+  if (Email Already Exists?) then (yes)
+    |User|
+    :Display Error Message
+    "Email already registered";
+    stop
+  else (no)
+    |System|
+    :Hash Password
+    using bcrypt;
+    
+    :Create User Account
+    Status: Pending;
+    
+    :Generate Verification Token
+    32 characters;
+    
+    :Store Token in Database
+    Expiry: 24 hours;
+    
+    |Email System|
+    :Send Verification Email
+    with verification link;
+    
+    |User|
+    :Display Success Message
+    "Verification email sent";
+    
+    :Open Email;
+    
+    :Click Verification Link;
+    
+    |System|
+    :Receive Verification Request;
+    
+    :Validate Token;
+    
+    if (Token Valid?) then (yes)
+      if (Token Expired?) then (yes)
+        |User|
+        :Display Error
+        "Token expired";
+        stop
+      else (no)
+        |System|
+        :Activate User Account
+        Status: Active;
+        
+        :Mark Token as Used;
+        
+        |User|
+        :Display Success
+        "Account activated";
+        
+        :Redirect to Login;
+        stop
+      endif
+    else (no)
+      |User|
+      :Display Error
+      "Invalid verification token";
+      stop
+    endif
+  endif
+else (no)
+  |User|
+  :Display Validation Errors
+  - Invalid Email Format
+  - Weak Password
+  - Missing Required Fields;
+  stop
+endif
+
+@enduml
+@startuml Grand Egyptian Museum - Activity Diagram (User Login)
+
+skinparam activityBackgroundColor LightCyan
+skinparam activityBorderColor DarkBlue
+skinparam activityDiamondBackgroundColor LightYellow
+skinparam activityDiamondBorderColor DarkOrange
+skinparam activityStartColor Green
+skinparam activityEndColor Red
+skinparam swimlaneBackgroundColor Azure
+
+title **User Login Process**
+
+|User|
+start
+:Navigate to Login Page;
+
+:Enter Credentials
+- Email
+- Password;
+
+:Submit Login Form;
+
+|System|
+:Receive Login Request;
+
+:Retrieve User by Email;
+
+if (User Exists?) then (yes)
+  :Check Account Status;
+  
+  if (Account Active?) then (yes)
+    :Verify Password
+    using password_verify();
+    
+    if (Password Correct?) then (yes)
+      :Create Session
+      Session ID + User ID;
+      
+      :Store Session in Database
+      Expiry: 24 hours;
+      
+      :Set Session Cookie
+      HttpOnly, Secure, SameSite;
+      
+      :Update Last Login Time;
+      
+      :Log Security Event
+      Successful Login + IP;
+      
+      |User|
+      :Redirect to Dashboard;
+      
+      :Display Welcome Message;
+      stop
+      
+    else (no)
+      |System|
+      :Increment Failed Login Count;
+      
+      :Log Failed Attempt
+      IP + Timestamp;
+      
+      if (Failed Attempts > 5?) then (yes)
+        :Apply Rate Limiting
+        Block for 15 minutes;
+        
+        |User|
+        :Display Rate Limit Error
+        "Maximum attempts exceeded";
+        stop
+      else (no)
+        |User|
+        :Display Generic Error
+        "Invalid credentials";
+        stop
+      endif
+    endif
+    
+  else (no)
+    |User|
+    :Display Account Inactive Error
+    "Account inactive. Please verify email";
+    stop
+  endif
+  
+else (no)
+  |System|
+  :Log Failed Attempt;
+  
+  |User|
+  :Display Generic Error
+  "Invalid credentials";
+  stop
+endif
+
+@enduml
+@startuml Grand Egyptian Museum - Activity Diagram (Create Booking)
+
+skinparam activityBackgroundColor LightGreen
+skinparam activityBorderColor DarkGreen
+skinparam activityDiamondBackgroundColor LightYellow
+skinparam activityDiamondBorderColor DarkOrange
+skinparam activityStartColor Green
+skinparam activityEndColor Red
+skinparam activityBarColor Purple
+skinparam swimlaneBackgroundColor Honeydew
+
+title **Create Booking Process**
+
+|User|
+start
+:Login to System;
+
+:Navigate to Booking Page;
+
+:Select Visit Details
+- Visit Date
+- Time Slot
+- Number of Visitors
+- Plan (Optional);
+
+:Submit Booking Request;
+
+|System|
+:Receive Booking Request;
+
+:Validate User Authentication;
+
+if (User Authenticated?) then (yes)
+  :Validate Input Data;
+  
+  if (Data Valid?) then (yes)
+    :Check Visit Date;
+    
+    if (Date in Future?) then (yes)
+      if (Date within 90 days?) then (yes)
+        
+        fork
+          :Check Capacity;
+        fork again
+          :Calculate Total Cost
+          Quantity × Price;
+        end fork
+        
+        if (Capacity Available?) then (yes)
+          
+          :Begin Transaction;
+          
+          :Reserve Capacity
+          Lock capacity for this slot;
+          
+          :Generate Booking Reference
+          8-character unique code;
+          
+          :Create Booking Record
+          Status: Confirmed;
+          
+          :Update Capacity
+          Decrease available capacity;
+          
+          :Commit Transaction;
+          
+          |Email System|
+          :Send Confirmation Email
+          with booking reference;
+          
+          |Payment Gateway|
+          if (Payment Required?) then (yes)
+            :Process Payment;
+            
+            if (Payment Success?) then (yes)
+              |System|
+              :Update Booking Status
+              Status: Paid;
+            else (no)
+              |System|
+              :Rollback Transaction;
+              
+              :Release Capacity;
+              
+              |User|
+              :Display Payment Error;
+              stop
+            endif
+          else (no)
+            |System|
+            :Mark as Pay Later;
+          endif
+          
+          |User|
+          :Display Booking Confirmation
+          - Booking Reference
+          - Visit Date & Time
+          - Number of Visitors
+          - Total Cost;
+          
+          :Redirect to Booking History;
+          stop
+          
+        else (no)
+          |User|
+          :Display Capacity Error
+          "Capacity not available for selected date";
+          stop
+        endif
+        
+      else (no)
+        |User|
+        :Display Date Range Error
+        "Cannot book more than 90 days in advance";
+        stop
+      endif
+      
+    else (no)
+      |User|
+      :Display Past Date Error
+      "Cannot book past dates";
+      stop
+    endif
+    
+  else (no)
+    |User|
+    :Display Validation Errors
+    - Invalid Date
+    - Invalid Quantity
+    - Missing Fields;
+    stop
+  endif
+  
+else (no)
+  |User|
+  :Redirect to Login;
+  stop
+endif
+
+@enduml
+@startuml Grand Egyptian Museum - Activity Diagram (Modify Booking)
+
+skinparam activityBackgroundColor LightSalmon
+skinparam activityBorderColor DarkRed
+skinparam activityDiamondBackgroundColor LightYellow
+skinparam activityDiamondBorderColor DarkOrange
+skinparam activityStartColor Green
+skinparam activityEndColor Red
+skinparam swimlaneBackgroundColor MistyRose
+
+title **Modify Booking Process**
+
+|User|
+start
+:View Booking History;
+
+:Select Booking to Modify;
+
+:Click Modify Button;
+
+|System|
+:Retrieve Booking Details;
+
+:Verify Booking Ownership;
+
+if (User Owns Booking?) then (yes)
+  :Check Modification Eligibility;
+  
+  if (Visit Date > 24 hours?) then (yes)
+    |User|
+    :Display Modification Form
+    with current booking details;
+    
+    :Update Visit Details
+    - New Date
+    - New Time Slot
+    - New Quantity;
+    
+    :Submit Modification;
+    
+    |System|
+    :Validate New Data;
+    
+    if (Data Valid?) then (yes)
+      :Check New Capacity;
+      
+      if (New Capacity Available?) then (yes)
+        :Begin Transaction;
+        
+        :Release Old Capacity;
+        
+        :Reserve New Capacity;
+        
+        :Update Booking Record;
+        
+        :Recalculate Cost;
+        
+        :Update Modification Timestamp;
+        
+        :Commit Transaction;
+        
+        |Email System|
+        :Send Modification Email
+        with updated details;
+        
+        |User|
+        :Display Success Message
+        "Booking modified successfully";
+        
+        :Show Updated Booking;
+        stop
+        
+      else (no)
+        |User|
+        :Display Capacity Error
+        "Capacity not available for new date";
+        stop
+      endif
+      
+    else (no)
+      |User|
+      :Display Validation Errors;
+      stop
+    endif
+    
+  else (no)
+    |User|
+    :Display Eligibility Error
+    "Cannot modify within 24 hours of visit";
+    stop
+  endif
+  
+else (no)
+  |User|
+  :Display Authorization Error
+  "Not authorized to modify this booking";
+  stop
+endif
+
+@enduml
+@startuml Grand Egyptian Museum - Activity Diagram (Cancel Booking)
+
+skinparam activityBackgroundColor LightPink
+skinparam activityBorderColor DarkRed
+skinparam activityDiamondBackgroundColor LightYellow
+skinparam activityDiamondBorderColor DarkOrange
+skinparam activityStartColor Green
+skinparam activityEndColor Red
+skinparam swimlaneBackgroundColor LavenderBlush
+
+title **Cancel Booking Process**
+
+|User|
+start
+:View Booking History;
+
+:Select Booking to Cancel;
+
+:Click Cancel Button;
+
+|System|
+:Retrieve Booking Details;
+
+:Verify Booking Ownership;
+
+if (User Owns Booking?) then (yes)
+  :Check Cancellation Policy;
+  
+  if (Visit Date > 48 hours?) then (yes)
+    |User|
+    :Display Cancellation Confirmation
+    "Are you sure you want to cancel?";
+    
+    if (User Confirms?) then (yes)
+      |System|
+      :Begin Transaction;
+      
+      :Update Booking Status
+      Status: Cancelled;
+      
+      :Release Reserved Capacity
+      Return capacity to pool;
+      
+      :Update Capacity Record
+      Increase available capacity;
+      
+      :Log Cancellation Event
+      User ID + Timestamp;
+      
+      :Commit Transaction;
+      
+      if (Payment Made?) then (yes)
+        |Payment Gateway|
+        :Process Refund;
+        
+        if (Refund Success?) then (yes)
+          |System|
+          :Update Payment Status
+          Status: Refunded;
+        else (no)
+          |System|
+          :Log Refund Failure;
+          
+          :Create Manual Review Task;
+        endif
+      endif
+      
+      |Email System|
+      :Send Cancellation Email
+      with cancellation confirmation;
+      
+      |User|
+      :Display Success Message
+      "Booking cancelled successfully";
+      
+      :Update Booking List
+      Show in cancelled section;
+      stop
+      
+    else (no)
+      :Return to Booking Details;
+      stop
+    endif
+    
+  else (no)
+    |User|
+    :Display Policy Error
+    "Cannot cancel within 48 hours of visit";
+    
+    :Suggest Contact Support;
+    stop
+  endif
+  
+else (no)
+  |User|
+  :Display Authorization Error
+  "Not authorized to cancel this booking";
+  stop
+endif
+
+@enduml
+@startuml Grand Egyptian Museum - Activity Diagram (Password Reset)
+
+skinparam activityBackgroundColor Wheat
+skinparam activityBorderColor Brown
+skinparam activityDiamondBackgroundColor LightYellow
+skinparam activityDiamondBorderColor DarkOrange
+skinparam activityStartColor Green
+skinparam activityEndColor Red
+skinparam swimlaneBackgroundColor Cornsilk
+
+title **Password Reset Process**
+
+|User|
+start
+:Navigate to Login Page;
+
+:Click "Forgot Password";
+
+:Enter Email Address;
+
+:Submit Request;
+
+|System|
+:Receive Reset Request;
+
+:Search for User by Email;
+
+if (User Exists?) then (yes)
+  :Generate Reset Token
+  32 characters, cryptographically secure;
+  
+  :Store Token in Database
+  Expiry: 1 hour;
+  
+  |Email System|
+  :Send Reset Email
+  with reset link;
+  
+  |User|
+  :Display Generic Message
+  "If email is registered, you'll receive reset link";
+  
+  note right
+    Generic message to prevent
+    email enumeration
+  end note
+  
+  :Check Email Inbox;
+  
+  :Click Reset Link;
+  
+  |System|
+  :Receive Reset Request;
+  
+  :Extract Token from URL;
+  
+  :Validate Token;
+  
+  if (Token Valid?) then (yes)
+    if (Token Expired?) then (yes)
+      |User|
+      :Display Expiration Error
+      "Token expired (1 hour validity)";
+      
+      :Suggest New Request;
+      stop
+      
+    else (no)
+      |User|
+      :Display New Password Form
+      - New Password
+      - Confirm Password;
+      
+      :Enter New Password;
+      
+      :Submit New Password;
+      
+      |System|
+      :Validate Password Requirements;
+      
+      if (Password Valid?) then (yes)
+        if (Passwords Match?) then (yes)
+          :Hash New Password
+          using bcrypt;
+          
+          :Update User Password;
+          
+          :Invalidate Reset Token
+          Mark as used;
+          
+          :Invalidate All User Sessions
+          For security;
+          
+          :Log Security Event
+          Password Reset + User ID;
+          
+          |Email System|
+          :Send Confirmation Email
+          "Password changed successfully";
+          
+          |User|
+          :Display Success Message
+          "Password changed";
+          
+          :Redirect to Login;
+          stop
+          
+        else (no)
+          |User|
+          :Display Mismatch Error
+          "Passwords do not match";
+          stop
+        endif
+        
+      else (no)
+        |User|
+        :Display Password Requirements
+        - Min 8 characters
+        - Uppercase letter
+        - Lowercase letter
+        - Number
+        - Special character;
+        stop
+      endif
+    endif
+    
+  else (no)
+    |User|
+    :Display Invalid Token Error
+    "Invalid or expired link";
+    stop
+  endif
+  
+else (no)
+  |User|
+  :Display Generic Message
+  "If email is registered, you'll receive reset link";
+  
+  note right
+    Don't reveal if email doesn't exist
+    to protect user privacy
+  end note
+  
+  stop
+endif
+
+@enduml

@@ -1,0 +1,361 @@
+
+      <html xmlns:o='urn:schemas-microsoft-com:office:office'
+            xmlns:w='urn:schemas-microsoft-com:office:word'
+            xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+          <meta charset="utf-8">
+          <title>Exported Document</title>
+          <style>
+              body { font-family: Arial, sans-serif; }
+          </style>
+      </head>
+      <body>
+          <h1 id="nonfunctionalrequirements">Non-Functional Requirements</h1>
+<h2 id="grandegyptianmuseumwebapplication">Grand Egyptian Museum Web Application</h2>
+<hr />
+<h2 id="1performancerequirements">1. Performance Requirements</h2>
+<h3 id="11responsetime">1.1 Response Time</h3>
+<p><strong>NFR-1:</strong> The system shall render the home page within 2 seconds for 95% of requests under normal load conditions on desktop broadband connections (≥5 Mbps).</p>
+<p><strong>NFR-2:</strong> The system shall render any page within 3 seconds for 95% of requests under normal load conditions on desktop broadband connections (≥5 Mbps).</p>
+<p><strong>NFR-3:</strong> The system shall render the home page within 4 seconds for 95% of requests on mobile 4G connections (≥3 Mbps).</p>
+<p><strong>NFR-4:</strong> The system shall render any page within 5 seconds for 95% of requests on mobile 4G connections (≥3 Mbps).</p>
+<p><strong>NFR-5:</strong> The system shall respond to user login requests within 1.5 seconds for 95% of authentication attempts.</p>
+<p><strong>NFR-6:</strong> The system shall process booking submissions and provide confirmation within 3 seconds for 95% of transactions.</p>
+<p><strong>NFR-7:</strong> The system shall process search queries and display results within 2 seconds for 90% of searches.</p>
+<p><strong>NFR-8:</strong> The system shall load image assets within 1.5 seconds for 90% of requests on broadband connections.</p>
+<h3 id="12databaseperformance">1.2 Database Performance</h3>
+<p><strong>NFR-9:</strong> The system shall execute single-record database queries (SELECT by primary key) within 100 milliseconds for 95% of queries.</p>
+<p><strong>NFR-10:</strong> The system shall execute multi-record listing queries (paginated results) within 500 milliseconds for 95% of queries.</p>
+<p><strong>NFR-11:</strong> The system shall execute complex JOIN queries involving 3 or more tables within 1 second for 90% of queries.</p>
+<p><strong>NFR-12:</strong> The system shall execute INSERT operations within 200 milliseconds for 95% of single-record insertions.</p>
+<p><strong>NFR-13:</strong> The system shall execute UPDATE operations within 300 milliseconds for 95% of single-record updates.</p>
+<p><strong>NFR-14:</strong> The system shall maintain database query performance with database size up to 100,000 user records and 50,000 booking records.</p>
+<h3 id="13throughput">1.3 Throughput</h3>
+<p><strong>NFR-15:</strong> The system shall support minimum of 100 concurrent user sessions without performance degradation exceeding 10% of single-user response times.</p>
+<p><strong>NFR-16:</strong> The system shall support minimum of 200 concurrent user sessions with performance degradation not exceeding 20% of single-user response times.</p>
+<p><strong>NFR-17:</strong> The system shall process minimum of 50 concurrent booking transactions without transaction failures due to concurrency conflicts.</p>
+<p><strong>NFR-18:</strong> The system shall handle minimum of 500 page requests per minute during peak usage periods.</p>
+<p><strong>NFR-19:</strong> The system shall support minimum of 20 concurrent administrative users performing content management operations without performance degradation.</p>
+<h3 id="14resourceutilization">1.4 Resource Utilization</h3>
+<p><strong>NFR-20:</strong> The system shall maintain CPU utilization below 70% under normal load conditions (100 concurrent users).</p>
+<p><strong>NFR-21:</strong> The system shall maintain CPU utilization below 85% under peak load conditions (200 concurrent users).</p>
+<p><strong>NFR-22:</strong> The system shall maintain memory utilization below 75% of available RAM under normal load conditions.</p>
+<p><strong>NFR-23:</strong> The system shall maintain database connection pool utilization below 80% under normal load conditions.</p>
+<p><strong>NFR-24:</strong> The system shall limit individual page size to maximum 3MB including all assets (HTML, CSS, JavaScript, images).</p>
+<p><strong>NFR-25:</strong> The system shall optimize images to maximum 500KB per image for standard content images.</p>
+<p><strong>NFR-26:</strong> The system shall implement lazy loading for images below the fold, reducing initial page load by minimum 30%.</p>
+<h3 id="15cachingandoptimization">1.5 Caching and Optimization</h3>
+<p><strong>NFR-27:</strong> The system shall implement server-side caching for static content with cache hit ratio of minimum 80%.</p>
+<p><strong>NFR-28:</strong> The system shall implement browser caching for static assets (CSS, JavaScript, images) with cache duration of minimum 7 days.</p>
+<p><strong>NFR-29:</strong> The system shall minify CSS and JavaScript files in production environment, reducing file size by minimum 30%.</p>
+<p><strong>NFR-30:</strong> The system shall concatenate multiple CSS files into single file and multiple JavaScript files into single file to reduce HTTP requests.</p>
+<p><strong>NFR-31:</strong> The system shall implement database query result caching for frequently accessed data with cache invalidation on data modification.</p>
+<p><strong>NFR-32:</strong> The system shall implement GZIP compression for text-based responses (HTML, CSS, JavaScript, JSON), achieving minimum 60% size reduction.</p>
+<hr />
+<h2 id="2usabilityrequirements">2. Usability Requirements</h2>
+<h3 id="21learnability">2.1 Learnability</h3>
+<p><strong>NFR-33:</strong> The system shall enable new users to complete account registration within 3 minutes without external assistance or documentation.</p>
+<p><strong>NFR-34:</strong> The system shall enable registered users to complete first ticket booking within 5 minutes of login without external assistance.</p>
+<p><strong>NFR-35:</strong> The system shall enable users to locate desired information (plans, events, facilities) within 2 navigation clicks from home page for 90% of content.</p>
+<p><strong>NFR-36:</strong> The system shall provide contextual help tooltips for complex form fields, accessible on hover or focus.</p>
+<p><strong>NFR-37:</strong> The system shall display progress indicators for multi-step processes (registration, booking) showing current step, completed steps, and remaining steps.</p>
+<p><strong>NFR-38:</strong> The system shall provide onboarding tutorial for first-time users highlighting key features and navigation (optional, dismissible).</p>
+<h3 id="22efficiency">2.2 Efficiency</h3>
+<p><strong>NFR-39:</strong> The system shall enable experienced users to complete ticket booking within 2 minutes from login to confirmation.</p>
+<p><strong>NFR-40:</strong> The system shall implement auto-fill support for form fields using browser autocomplete attributes, reducing data entry time by minimum 40%.</p>
+<p><strong>NFR-41:</strong> The system shall remember user preferences (language, display settings) across sessions, eliminating need for repeated configuration.</p>
+<p><strong>NFR-42:</strong> The system shall provide keyboard shortcuts for common actions (navigation, form submission) for power users.</p>
+<p><strong>NFR-43:</strong> The system shall implement predictive search displaying suggestions after minimum 2 characters typed.</p>
+<h3 id="23errorpreventionandrecovery">2.3 Error Prevention and Recovery</h3>
+<p><strong>NFR-44:</strong> The system shall implement client-side form validation providing immediate feedback within 500 milliseconds of field blur event.</p>
+<p><strong>NFR-45:</strong> The system shall display inline error messages adjacent to problematic form fields, eliminating need to scroll to view errors.</p>
+<p><strong>NFR-46:</strong> The system shall preserve user-entered data after form validation failures, requiring correction only of invalid fields.</p>
+<p><strong>NFR-47:</strong> The system shall display confirmation dialogs for destructive actions (booking cancellation, account deletion) requiring explicit user confirmation.</p>
+<p><strong>NFR-48:</strong> The system shall provide undo capability for reversible administrative actions within 30 seconds of execution.</p>
+<p><strong>NFR-49:</strong> The system shall display clear, actionable error messages using plain language without technical jargon, guiding users toward resolution.</p>
+<p><strong>NFR-50:</strong> The system shall implement auto-save functionality for long-form content creation (administrative interfaces), saving drafts every 60 seconds.</p>
+<h3 id="24usersatisfaction">2.4 User Satisfaction</h3>
+<p><strong>NFR-51:</strong> The system shall achieve minimum System Usability Scale (SUS) score of 70 (above average usability) in formal usability testing with minimum 20 representative users.</p>
+<p><strong>NFR-52:</strong> The system shall achieve minimum task completion rate of 85% for critical user journeys (registration, booking, event viewing) in usability testing.</p>
+<p><strong>NFR-53:</strong> The system shall achieve minimum user satisfaction rating of 4.0 out of 5.0 in post-task surveys.</p>
+<p><strong>NFR-54:</strong> The system shall maintain consistent visual design language across all pages, adhering to defined style guide with zero deviations in production.</p>
+<p><strong>NFR-55:</strong> The system shall implement intuitive navigation patterns consistent with established web conventions, requiring zero specialized training for basic operations.</p>
+<h3 id="25accessibility">2.5 Accessibility</h3>
+<p><strong>NFR-56:</strong> The system shall conform to Web Content Accessibility Guidelines (WCAG) 2.1 Level AA standards, achieving 100% compliance in automated accessibility testing.</p>
+<p><strong>NFR-57:</strong> The system shall maintain minimum contrast ratio of 4.5:1 for normal text (under 18pt or 14pt bold) against background colors.</p>
+<p><strong>NFR-58:</strong> The system shall maintain minimum contrast ratio of 3:1 for large text (18pt and above or 14pt bold and above) against background colors.</p>
+<p><strong>NFR-59:</strong> The system shall support complete keyboard navigation for all interactive elements, with visible focus indicators meeting minimum 3:1 contrast ratio.</p>
+<p><strong>NFR-60:</strong> The system shall provide text alternatives (alt attributes) for all informative images, with meaningful descriptions under 125 characters.</p>
+<p><strong>NFR-61:</strong> The system shall implement semantic HTML5 markup using appropriate element types (header, nav, main, article, aside, footer) for content structure.</p>
+<p><strong>NFR-62:</strong> The system shall implement ARIA landmarks and roles for enhanced screen reader navigation, covering 100% of major page sections.</p>
+<p><strong>NFR-63:</strong> The system shall associate all form labels with input fields using explicit label-for relationships, achieving 100% label association.</p>
+<p><strong>NFR-64:</strong> The system shall provide skip navigation links allowing keyboard users to bypass repetitive content, accessible as first tab-stop on page.</p>
+<p><strong>NFR-65:</strong> The system shall support screen reader compatibility with JAWS, NVDA, and VoiceOver, achieving 90% content comprehension in testing.</p>
+<p><strong>NFR-66:</strong> The system shall implement responsive typography with minimum 16px base font size for body text, scalable to 200% without loss of functionality.</p>
+<p><strong>NFR-67:</strong> The system shall provide captions or transcripts for all video content, synchronized within 1 second of audio.</p>
+<p><strong>NFR-68:</strong> The system shall avoid using color as sole means of conveying information, supplementing with text labels or patterns.</p>
+<h3 id="26internationalizationandlocalizationfutureconsideration">2.6 Internationalization and Localization (Future Consideration)</h3>
+<p><strong>NFR-69:</strong> The system shall support UTF-8 character encoding throughout, enabling display of international characters including Arabic, Chinese, and other non-Latin scripts.</p>
+<p><strong>NFR-70:</strong> The system shall implement date and time formatting configurable by locale, supporting both DD/MM/YYYY and MM/DD/YYYY formats.</p>
+<p><strong>NFR-71:</strong> The system architecture shall support future multi-language implementation through externalized string resources without code modifications.</p>
+<h3 id="27mobileresponsiveness">2.7 Mobile Responsiveness</h3>
+<p><strong>NFR-72:</strong> The system shall implement fully responsive design adapting layout across minimum 5 breakpoints: mobile portrait (≤480px), mobile landscape (481-767px), tablet portrait (768-1023px), desktop (1024-1439px), and large desktop (≥1440px).</p>
+<p><strong>NFR-73:</strong> The system shall maintain full functionality across all viewport sizes without horizontal scrolling on standard devices.</p>
+<p><strong>NFR-74:</strong> The system shall implement touch-friendly interface elements with minimum touch target size of 44×44 pixels for mobile devices.</p>
+<p><strong>NFR-75:</strong> The system shall implement mobile-optimized navigation with collapsible hamburger menu for viewports under 768px width.</p>
+<p><strong>NFR-76:</strong> The system shall optimize form layouts for mobile input with appropriately sized input fields and mobile-friendly keyboards (email, tel, number input types).</p>
+<p><strong>NFR-77:</strong> The system shall achieve minimum Google PageSpeed Insights mobile score of 70 in performance category.</p>
+<hr />
+<h2 id="3securityrequirements">3. Security Requirements</h2>
+<h3 id="31authenticationsecurity">3.1 Authentication Security</h3>
+<p><strong>NFR-78:</strong> The system shall enforce password complexity requirements: minimum 8 characters, containing at least one uppercase letter, one lowercase letter, one numeric digit, and one special character.</p>
+<p><strong>NFR-79:</strong> The system shall hash all passwords using bcrypt algorithm with cost factor of minimum 10 before database storage, never storing passwords in plain text or reversible encryption.</p>
+<p><strong>NFR-80:</strong> The system shall implement secure password comparison using timing-attack-resistant functions, preventing timing-based password enumeration.</p>
+<p><strong>NFR-81:</strong> The system shall implement account lockout after 10 consecutive failed login attempts within 1-hour period, requiring password reset or 1-hour cooldown.</p>
+<p><strong>NFR-82:</strong> The system shall implement rate limiting preventing more than 5 failed login attempts per IP address within 15-minute window.</p>
+<p><strong>NFR-83:</strong> The system shall implement progressive authentication delays, increasing delay by 2 seconds after each failed attempt up to maximum 10 seconds.</p>
+<p><strong>NFR-84:</strong> The system shall generate cryptographically secure random tokens using PHP's random_bytes() function with minimum 32 bytes (256 bits) entropy for verification and reset tokens.</p>
+<p><strong>NFR-85:</strong> The system shall expire email verification tokens after 24 hours from generation.</p>
+<p><strong>NFR-86:</strong> The system shall expire password reset tokens after 1 hour from generation and invalidate immediately upon use.</p>
+<p><strong>NFR-87:</strong> The system shall invalidate all existing user sessions upon password change, requiring re-authentication.</p>
+<p><strong>NFR-88:</strong> The system shall log all authentication events (successful logins, failed attempts, lockouts) with timestamp, IP address, user agent, and outcome.</p>
+<h3 id="32sessionmanagementsecurity">3.2 Session Management Security</h3>
+<p><strong>NFR-89:</strong> The system shall generate session identifiers using cryptographically secure random number generator with minimum 128 bits of entropy.</p>
+<p><strong>NFR-90:</strong> The system shall set session cookies with HttpOnly flag preventing JavaScript access to session identifiers.</p>
+<p><strong>NFR-91:</strong> The system shall set session cookies with Secure flag in production environment, transmitting cookies only over HTTPS connections.</p>
+<p><strong>NFR-92:</strong> The system shall set session cookies with SameSite=Strict attribute preventing cross-site request forgery via cookie transmission.</p>
+<p><strong>NFR-93:</strong> The system shall implement session regeneration upon successful authentication, privilege escalation, and at 15-minute intervals, preventing session fixation attacks.</p>
+<p><strong>NFR-94:</strong> The system shall set session absolute timeout at 24 hours from creation, requiring re-authentication regardless of activity.</p>
+<p><strong>NFR-95:</strong> The system shall set session idle timeout at 2 hours from last activity, automatically logging out inactive users.</p>
+<p><strong>NFR-96:</strong> The system shall store session data server-side (database or secure file system) rather than client-side cookies, storing only session identifier in cookie.</p>
+<p><strong>NFR-97:</strong> The system shall implement concurrent session detection, limiting users to maximum 5 active sessions simultaneously.</p>
+<p><strong>NFR-98:</strong> The system shall implement automatic cleanup of expired sessions, executing purge operation every 30 minutes.</p>
+<h3 id="33inputvalidationandoutputencoding">3.3 Input Validation and Output Encoding</h3>
+<p><strong>NFR-99:</strong> The system shall validate all user input on server-side regardless of client-side validation, rejecting invalid input with descriptive error messages.</p>
+<p><strong>NFR-100:</strong> The system shall implement whitelist validation for input accepting predefined values (dropdowns, radio buttons), rejecting any value not in whitelist.</p>
+<p><strong>NFR-101:</strong> The system shall validate email addresses using RFC 5322 compliant regex pattern, rejecting malformed addresses.</p>
+<p><strong>NFR-102:</strong> The system shall validate phone numbers against configurable format patterns, supporting international formats.</p>
+<p><strong>NFR-103:</strong> The system shall validate date inputs ensuring dates are valid calendar dates and within acceptable ranges.</p>
+<p><strong>NFR-104:</strong> The system shall validate numeric inputs ensuring values are within acceptable min/max ranges and match expected data types.</p>
+<p><strong>NFR-105:</strong> The system shall limit text input lengths to prevent buffer overflow and denial-of-service attacks: maximum 100 characters for names, 255 characters for emails, 1000 characters for short descriptions, 10,000 characters for long descriptions.</p>
+<p><strong>NFR-106:</strong> The system shall sanitize all user-generated content before storage, removing potentially malicious HTML tags and JavaScript.</p>
+<p><strong>NFR-107:</strong> The system shall encode all user-generated content before display using HTML entity encoding, preventing Cross-Site Scripting (XSS) attacks.</p>
+<p><strong>NFR-108:</strong> The system shall encode content contextually: HTML encoding for HTML context, JavaScript encoding for JavaScript context, URL encoding for URL parameters, CSS encoding for CSS context.</p>
+<p><strong>NFR-109:</strong> The system shall implement Content Security Policy (CSP) headers restricting resource loading to trusted sources, preventing inline script execution.</p>
+<h3 id="34sqlinjectionprevention">3.4 SQL Injection Prevention</h3>
+<p><strong>NFR-110:</strong> The system shall use exclusively PDO prepared statements with parameterized queries for all database operations, achieving 100% prepared statement coverage.</p>
+<p><strong>NFR-111:</strong> The system shall never construct SQL queries using string concatenation or interpolation of user input.</p>
+<p><strong>NFR-112:</strong> The system shall implement database user account with principle of least privilege, granting only necessary permissions (SELECT, INSERT, UPDATE, DELETE) and denying administrative privileges (DROP, ALTER, CREATE USER).</p>
+<p><strong>NFR-113:</strong> The system shall implement separate database connection credentials for read-only operations and write operations where applicable.</p>
+<p><strong>NFR-114:</strong> The system shall validate database query results for expected data types before processing, preventing type confusion attacks.</p>
+<h3 id="35crosssiterequestforgerycsrfprevention">3.5 Cross-Site Request Forgery (CSRF) Prevention</h3>
+<p><strong>NFR-115:</strong> The system shall implement CSRF protection using synchronizer token pattern for all state-changing operations (POST, PUT, DELETE requests).</p>
+<p><strong>NFR-116:</strong> The system shall generate unique CSRF tokens per user session using cryptographically secure random number generator with minimum 128 bits entropy.</p>
+<p><strong>NFR-117:</strong> The system shall validate CSRF token on all state-changing requests before processing, rejecting requests with missing or invalid tokens.</p>
+<p><strong>NFR-118:</strong> The system shall regenerate CSRF tokens after successful form submission preventing token replay attacks.</p>
+<p><strong>NFR-119:</strong> The system shall implement double-submit cookie pattern as additional CSRF defense layer for AJAX requests.</p>
+<h3 id="36fileuploadsecurity">3.6 File Upload Security</h3>
+<p><strong>NFR-120:</strong> The system shall validate uploaded file types using both extension checking and MIME type verification, accepting only whitelisted types (JPEG, PNG, GIF, PDF).</p>
+<p><strong>NFR-121:</strong> The system shall enforce maximum file size limits: 5MB for images, 10MB for documents, rejecting larger files.</p>
+<p><strong>NFR-122:</strong> The system shall scan uploaded files for malware using virus scanning tools before accepting upload.</p>
+<p><strong>NFR-123:</strong> The system shall rename uploaded files using randomly generated names, preventing file name-based attacks and information disclosure.</p>
+<p><strong>NFR-124:</strong> The system shall store uploaded files outside web document root, serving files through controlled application logic rather than direct web server access.</p>
+<p><strong>NFR-125:</strong> The system shall validate image files by attempting to process with image libraries, detecting corrupted or malicious image files.</p>
+<p><strong>NFR-126:</strong> The system shall strip metadata (EXIF data) from uploaded images, preventing information leakage.</p>
+<h3 id="37transportlayersecurity">3.7 Transport Layer Security</h3>
+<p><strong>NFR-127:</strong> The system shall enforce HTTPS protocol for all communications in production environment, achieving 100% HTTPS coverage.</p>
+<p><strong>NFR-128:</strong> The system shall redirect all HTTP requests to HTTPS equivalents using 301 permanent redirects.</p>
+<p><strong>NFR-129:</strong> The system shall implement TLS 1.2 or higher as minimum protocol version, disabling SSLv3, TLS 1.0, and TLS 1.1.</p>
+<p><strong>NFR-130:</strong> The system shall implement strong cipher suites supporting forward secrecy (ECDHE), achieving minimum A grade in SSL Labs testing.</p>
+<p><strong>NFR-131:</strong> The system shall implement HTTP Strict Transport Security (HSTS) header with minimum max-age of 31536000 seconds (1 year).</p>
+<p><strong>NFR-132:</strong> The system shall obtain SSL/TLS certificate from trusted Certificate Authority (CA), maintaining certificate validity and renewal before expiration.</p>
+<h3 id="38securityheaders">3.8 Security Headers</h3>
+<p><strong>NFR-133:</strong> The system shall implement X-Frame-Options header with value DENY or SAMEORIGIN, preventing clickjacking attacks.</p>
+<p><strong>NFR-134:</strong> The system shall implement X-Content-Type-Options header with value nosniff, preventing MIME type sniffing attacks.</p>
+<p><strong>NFR-135:</strong> The system shall implement X-XSS-Protection header with value "1; mode=block" for legacy browser protection.</p>
+<p><strong>NFR-136:</strong> The system shall implement Referrer-Policy header with value "strict-origin-when-cross-origin", limiting referrer information leakage.</p>
+<p><strong>NFR-137:</strong> The system shall implement Content-Security-Policy header defining trusted content sources and preventing inline script execution.</p>
+<p><strong>NFR-138:</strong> The system shall implement Permissions-Policy header restricting access to sensitive browser features (camera, microphone, geolocation).</p>
+<h3 id="39dataprotection">3.9 Data Protection</h3>
+<p><strong>NFR-139:</strong> The system shall encrypt sensitive data at rest including passwords (using bcrypt), payment information (if stored), and personal identification numbers using AES-256 encryption.</p>
+<p><strong>NFR-140:</strong> The system shall implement database connection encryption using SSL/TLS between application and database servers.</p>
+<p><strong>NFR-141:</strong> The system shall mask sensitive data in logs, preventing exposure of passwords, credit card numbers, and personal identification numbers.</p>
+<p><strong>NFR-142:</strong> The system shall implement secure deletion of sensitive data, overwriting data before marking as deleted, preventing data recovery.</p>
+<p><strong>NFR-143:</strong> The system shall implement role-based access control restricting access to sensitive data based on user role and need-to-know principle.</p>
+<p><strong>NFR-144:</strong> The system shall maintain audit logs for access to sensitive data including timestamp, user identifier, action performed, and data accessed.</p>
+<h3 id="310errorhandlingandinformationdisclosure">3.10 Error Handling and Information Disclosure</h3>
+<p><strong>NFR-145:</strong> The system shall display generic error messages to end users, never exposing technical details such as stack traces, SQL queries, or file paths.</p>
+<p><strong>NFR-146:</strong> The system shall log detailed error information server-side including stack traces, SQL queries, and context data for debugging purposes.</p>
+<p><strong>NFR-147:</strong> The system shall disable detailed error reporting in production environment, configuring PHP error_reporting and display_errors appropriately.</p>
+<p><strong>NFR-148:</strong> The system shall implement custom error pages (404, 500) preventing exposure of default server error pages.</p>
+<p><strong>NFR-149:</strong> The system shall suppress database error messages from being displayed to users, logging errors server-side instead.</p>
+<h3 id="311securitytestingandcompliance">3.11 Security Testing and Compliance</h3>
+<p><strong>NFR-150:</strong> The system shall pass OWASP Top 10 vulnerability assessment, demonstrating zero critical and high-severity vulnerabilities.</p>
+<p><strong>NFR-151:</strong> The system shall pass automated security scanning using tools such as OWASP ZAP or Burp Suite, addressing 100% of identified high-severity issues.</p>
+<p><strong>NFR-152:</strong> The system shall undergo manual penetration testing before production deployment, remediating all identified security vulnerabilities.</p>
+<p><strong>NFR-153:</strong> The system shall maintain security patch currency, applying security updates within 30 days of release for critical vulnerabilities.</p>
+<p><strong>NFR-154:</strong> The system shall implement security monitoring and alerting for suspicious activities including multiple failed login attempts, unusual traffic patterns, and potential attack signatures.</p>
+<hr />
+<h2 id="4reliabilityrequirements">4. Reliability Requirements</h2>
+<h3 id="41faulttolerance">4.1 Fault Tolerance</h3>
+<p><strong>NFR-155:</strong> The system shall implement graceful degradation, maintaining core functionality (browsing, viewing content) when non-critical components (recommendations, analytics) fail.</p>
+<p><strong>NFR-156:</strong> The system shall implement database connection retry logic attempting reconnection 3 times with exponential backoff before reporting failure.</p>
+<p><strong>NFR-157:</strong> The system shall implement transaction rollback mechanisms ensuring data consistency when transaction failures occur, achieving 100% rollback success rate.</p>
+<p><strong>NFR-158:</strong> The system shall validate data integrity constraints at both application and database layers, preventing invalid data persistence.</p>
+<p><strong>NFR-159:</strong> The system shall implement circuit breaker pattern for external service integrations (email, payment gateway), preventing cascading failures.</p>
+<p><strong>NFR-160:</strong> The system shall handle null and undefined values defensively throughout codebase, preventing null pointer exceptions.</p>
+<h3 id="42errorrecovery">4.2 Error Recovery</h3>
+<p><strong>NFR-161:</strong> The system shall recover automatically from transient failures (network timeouts, temporary database unavailability) within 30 seconds without manual intervention.</p>
+<p><strong>NFR-162:</strong> The system shall implement email queue with automatic retry mechanism, attempting delivery 3 times with increasing delays (immediate, 5 minutes, 30 minutes) before marking as failed.</p>
+<p><strong>NFR-163:</strong> The system shall implement automatic session recovery after temporary disconnection for operations in progress (file uploads, form submissions).</p>
+<p><strong>NFR-164:</strong> The system shall preserve application state during unexpected shutdowns, enabling recovery to last known good state.</p>
+<p><strong>NFR-165:</strong> The system shall implement health check endpoints enabling automated monitoring and alerting of system status.</p>
+<h3 id="43dataintegrity">4.3 Data Integrity</h3>
+<p><strong>NFR-166:</strong> The system shall implement database foreign key constraints enforcing referential integrity, preventing orphaned records with 100% enforcement.</p>
+<p><strong>NFR-167:</strong> The system shall implement database transactions for multi-step operations (booking creation with capacity update), ensuring atomicity with 100% ACID compliance.</p>
+<p><strong>NFR-168:</strong> The system shall validate data integrity during import/export operations, detecting and reporting data corruption with 100% validation coverage.</p>
+<p><strong>NFR-169:</strong> The system shall implement database triggers for automatic timestamp updates (created_at, updated_at), ensuring accurate audit trail.</p>
+<p><strong>NFR-170:</strong> The system shall implement database constraints (NOT NULL, UNIQUE, CHECK) for critical data fields, achieving 100% constraint coverage for required fields.</p>
+<p><strong>NFR-171:</strong> The system shall perform data integrity checks during backup operations, verifying backup completeness and restorability with 100% verification before confirming success.</p>
+<h3 id="44failurehandling">4.4 Failure Handling</h3>
+<p><strong>NFR-172:</strong> The system shall log all application errors with severity classification (DEBUG, INFO, WARNING, ERROR, CRITICAL) and structured format including timestamp, error message, stack trace, user context, and request details.</p>
+<p><strong>NFR-173:</strong> The system shall implement centralized exception handling catching all unhandled exceptions and providing appropriate user feedback without exposing technical details.</p>
+<p><strong>NFR-174:</strong> The system shall implement dead letter queue for failed asynchronous operations (email delivery, payment processing), enabling manual review and retry.</p>
+<p><strong>NFR-175:</strong> The system shall implement monitoring dashboards displaying real-time error rates, enabling proactive issue detection when error rate exceeds 1% of requests.</p>
+<p><strong>NFR-176:</strong> The system shall generate automated alerts for critical errors sent to administrative personnel via email or SMS within 5 minutes of detection.</p>
+<hr />
+<h2 id="5scalabilityrequirements">5. Scalability Requirements</h2>
+<h3 id="51verticalscalability">5.1 Vertical Scalability</h3>
+<p><strong>NFR-177:</strong> The system shall scale vertically to support increased load through hardware upgrades (CPU, RAM), achieving linear performance improvement up to 4x resource increase.</p>
+<p><strong>NFR-178:</strong> The system shall maintain performance characteristics when database size grows to 1 million user records and 500,000 booking records through proper indexing strategy.</p>
+<p><strong>NFR-179:</strong> The system shall support database connection pool expansion from 20 to 100 connections without code modifications, configured through environment variables.</p>
+<h3 id="52horizontalscalability">5.2 Horizontal Scalability</h3>
+<p><strong>NFR-180:</strong> The system architecture shall support horizontal scaling through addition of multiple web server instances behind load balancer without code modifications.</p>
+<p><strong>NFR-181:</strong> The system shall implement stateless request handling storing session data in shared session storage (database or Redis) rather than server memory, enabling session access across multiple server instances.</p>
+<p><strong>NFR-182:</strong> The system shall support database read replica configuration, routing read operations to replica servers achieving 70% read traffic distribution to replicas.</p>
+<p><strong>NFR-183:</strong> The system shall implement sticky session support in load balancer configuration as fallback mechanism for session affinity.</p>
+<p><strong>NFR-184:</strong> The system shall store uploaded files in shared file system or object storage (not local disk), enabling file access across multiple web server instances.</p>
+<h3 id="53loaddistribution">5.3 Load Distribution</h3>
+<p><strong>NFR-185:</strong> The system shall support load balancer integration using health check endpoints, enabling automatic traffic routing away from unhealthy servers.</p>
+<p><strong>NFR-186:</strong> The system shall distribute background tasks (email sending, report generation) across multiple worker processes or servers using job queue system.</p>
+<p><strong>NFR-187:</strong> The system shall implement database query load distribution routing read queries to read replicas and write queries to primary server with 100% write routing accuracy.</p>
+<p><strong>NFR-188:</strong> The system shall support Content Delivery Network (CDN) integration for static assets, offloading static file serving from application servers and achieving 80% CDN cache hit ratio.</p>
+<h3 id="54growthcapacity">5.4 Growth Capacity</h3>
+<p><strong>NFR-189:</strong> The system shall accommodate growth to 10,000 registered users without architectural changes or performance degradation beyond 10%.</p>
+<p><strong>NFR-190:</strong> The system shall accommodate growth to 50,000 total bookings without architectural changes or performance degradation beyond 10%.</p>
+<p><strong>NFR-191:</strong> The system shall accommodate growth to 1,000 bookings per day without transaction failures or significant response time degradation (maximum 20% increase).</p>
+<p><strong>NFR-192:</strong> The system shall accommodate growth to 500 concurrent active users without service unavailability or response time exceeding 5 seconds.</p>
+<p><strong>NFR-193:</strong> The system shall accommodate storage of 100GB of media files (images, documents) without performance impact on media retrieval operations.</p>
+<h3 id="55resourceoptimization">5.5 Resource Optimization</h3>
+<p><strong>NFR-194:</strong> The system shall implement pagination for listing pages limiting results to maximum 20 items per page, reducing memory consumption and query execution time.</p>
+<p><strong>NFR-195:</strong> The system shall implement lazy loading for images and media content, loading resources on-demand rather than on initial page load.</p>
+<p><strong>NFR-196:</strong> The system shall implement database connection pooling reusing connections across requests, maintaining pool size between 10 and 50 connections based on load.</p>
+<p><strong>NFR-197:</strong> The system shall implement query result caching with configurable TTL (Time To Live) reducing database load by minimum 40% for frequently accessed data.</p>
+<p><strong>NFR-198:</strong> The system shall implement asynchronous processing for non-critical operations (email sending, analytics), preventing blocking of user-facing requests.</p>
+<hr />
+<h2 id="6maintainabilityrequirements">6. Maintainability Requirements</h2>
+<h3 id="61codequality">6.1 Code Quality</h3>
+<p><strong>NFR-199:</strong> The system shall achieve minimum code coverage of 70% through automated unit testing, covering critical business logic and data validation functions.</p>
+<p><strong>NFR-200:</strong> The system shall pass static code analysis using PHP_CodeSniffer with PSR-12 coding standard, achieving zero violations in production code.</p>
+<p><strong>NFR-201:</strong> The system shall maintain cyclomatic complexity below 10 for individual functions/methods, promoting code simplicity and testability.</p>
+<p><strong>NFR-202:</strong> The system shall limit function/method length to maximum 50 lines of code, promoting code modularity and readability.</p>
+<p><strong>NFR-203:</strong> The system shall limit class length to maximum 500 lines of code, promoting single responsibility principle adherence.</p>
+<p><strong>NFR-204:</strong> The system shall achieve minimum maintainability index score of 70 (out of 100) using code metrics tools, indicating good maintainability.</p>
+<p><strong>NFR-205:</strong> The system shall eliminate code duplication achieving maximum 5% code duplication ratio across codebase.</p>
+<h3 id="62codeorganization">6.2 Code Organization</h3>
+<p><strong>NFR-206:</strong> The system shall implement strict MVC architectural pattern with clear separation of concerns: Models containing only business logic and data access, Views containing only presentation logic, Controllers containing only request handling and coordination.</p>
+<p><strong>NFR-207:</strong> The system shall organize code files in logical directory structure separating models, views, controllers, utilities, configuration, and assets with zero architectural violations.</p>
+<p><strong>NFR-208:</strong> The system shall follow PSR-4 autoloading standard for class organization, mapping namespaces to directory structure with 100% compliance.</p>
+<p><strong>NFR-209:</strong> The system shall implement single responsibility principle with each class having one clearly defined purpose, achieving 90% SRP compliance in code review.</p>
+<p><strong>NFR-210:</strong> The system shall implement dependency injection for service dependencies, avoiding hard-coded dependencies and promoting testability.</p>
+<h3 id="63documentation">6.3 Documentation</h3>
+<p><strong>NFR-211:</strong> The system shall include inline code documentation (PHPDoc comments) for all public classes, methods, and functions specifying purpose, parameters, return types, and exceptions.</p>
+<p><strong>NFR-212:</strong> The system shall maintain README.md documentation describing: project overview, installation procedures, configuration requirements, deployment instructions, and directory structure with minimum 2000 words.</p>
+<p><strong>NFR-213:</strong> The system shall maintain API documentation for all controller endpoints specifying HTTP method, URL pattern, request parameters, response format, and status codes.</p>
+<p><strong>NFR-214:</strong> The system shall maintain database schema documentation describing all tables, columns, relationships, and constraints with entity-relationship diagrams.</p>
+<p><strong>NFR-215:</strong> The system shall maintain deployment guide documenting server requirements, environment configuration, security hardening steps, and troubleshooting procedures.</p>
+<p><strong>NFR-216:</strong> The system shall maintain CHANGELOG.md documenting all significant changes, bug fixes, and feature additions with version numbers and dates.</p>
+<p><strong>NFR-217:</strong> The system shall achieve minimum 80% code comment density for complex business logic sections requiring explanation.</p>
+<h3 id="64configurationmanagement">6.4 Configuration Management</h3>
+<p><strong>NFR-218:</strong> The system shall externalize all environment-specific configuration (database credentials, email settings, API keys, application URLs) to configuration files outside codebase.</p>
+<p><strong>NFR-219:</strong> The system shall support multiple configuration profiles (development, staging, production) loaded based on environment variable with zero code changes between environments.</p>
+<p><strong>NFR-220:</strong> The system shall store sensitive configuration values (passwords, API keys) in environment variables or encrypted configuration files, never in version control.</p>
+<p><strong>NFR-221:</strong> The system shall provide configuration templates (.env.example) documenting all required configuration parameters with descriptions and example values.</p>
+<p><strong>NFR-222:</strong> The system shall validate configuration on application startup, reporting missing or invalid configuration values before accepting requests.</p>
+<h3 id="65loggingandmonitoring">6.5 Logging and Monitoring</h3>
+<p><strong>NFR-223:</strong> The system shall implement structured logging with configurable log levels (DEBUG, INFO, WARNING, ERROR, CRITICAL) enabling granular log filtering.</p>
+<p><strong>NFR-224:</strong> The system shall log all critical operations (authentication events, booking transactions, administrative actions) with complete context including timestamp, user identifier, action, and outcome.</p>
+<p><strong>NFR-225:</strong> The system shall implement log rotation preventing unlimited log file growth, rotating logs daily and retaining minimum 30 days of history.</p>
+<p><strong>NFR-226:</strong> The system shall separate error logs from access logs, writing to different files for easier analysis.</p>
+<p><strong>NFR-227:</strong> The system shall implement performance logging recording response times for requests exceeding 3 seconds threshold.</p>
+<p><strong>NFR-228:</strong> The system shall expose metrics endpoint providing application statistics (request count, error rate, active users, database query performance) for monitoring systems.</p>
+<h3 id="66versioncontrol">6.6 Version Control</h3>
+<p><strong>NFR-229:</strong> The system shall maintain version control using Git with meaningful commit messages following conventional commit format.</p>
+<p><strong>NFR-230:</strong> The system shall implement branching strategy (Git Flow or Trunk-Based Development) separating feature development, staging, and production code.</p>
+<p><strong>NFR-231:</strong> The system shall require code review approval before merging changes to main/production branches, enforcing minimum 1 reviewer approval.</p>
+<p><strong>NFR-232:</strong> The system shall tag all production releases with semantic version numbers (MAJOR.MINOR.PATCH) enabling version tracking and rollback.</p>
+<p><strong>NFR-233:</strong> The system shall maintain .gitignore file preventing sensitive files (configuration, credentials, IDE settings, vendor libraries) from entering version control.</p>
+<h3 id="67testingsupport">6.7 Testing Support</h3>
+<p><strong>NFR-234:</strong> The system shall provide separate testing database configuration preventing test execution from affecting production data with 100% data isolation.</p>
+<p><strong>NFR-235:</strong> The system shall implement database seeding functionality populating test data for development and testing environments.</p>
+<p><strong>NFR-236:</strong> The system shall implement database migration system enabling version-controlled schema</p>
+<p><strong>NFR-237:</strong> The system shall support automated testing through PHPUnit or similar framework with test execution completing within 5 minutes.</p>
+<p><strong>NFR-238:</strong> The system shall implement test fixtures providing consistent test data reducing test setup complexity.</p>
+<h3 id="68upgradeandmigration">6.8 Upgrade and Migration</h3>
+<p><strong>NFR-239:</strong> The system shall support backward-compatible database schema migrations enabling zero-downtime deployments for non-breaking changes.</p>
+<p><strong>NFR-240:</strong> The system shall maintain data migration scripts for major version upgrades documenting migration procedures and rollback steps.</p>
+<p><strong>NFR-241:</strong> The system shall support configuration migration when configuration schema changes, providing migration utilities or documentation.</p>
+<p><strong>NFR-242:</strong> The system shall maintain upgrade documentation specifying PHP version requirements, database migration procedures, and post-upgrade verification steps.</p>
+<hr />
+<h2 id="7availabilityrequirements">7. Availability Requirements</h2>
+<h3 id="71systemuptime">7.1 System Uptime</h3>
+<p><strong>NFR-243:</strong> The system shall maintain 99.0% uptime during scheduled operating hours (defined as 24/7 excluding planned maintenance), measured monthly.</p>
+<p><strong>NFR-244:</strong> The system shall schedule planned maintenance during low-traffic periods (defined as 2:00 AM - 6:00 AM local time) with maximum 4 hours monthly maintenance window.</p>
+<p><strong>NFR-245:</strong> The system shall provide minimum 48 hours advance notice for planned maintenance through website banner, email notification, and status page.</p>
+<p><strong>NFR-246:</strong> The system shall complete unplanned recovery within 4 hours of critical failure for 95% of incidents.</p>
+<p><strong>NFR-247:</strong> The system shall implement automatic failover to backup systems within 5 minutes of primary system failure (if redundant infrastructure available).</p>
+<h3 id="72backupandrecovery">7.2 Backup and Recovery</h3>
+<p><strong>NFR-248:</strong> The system shall perform automated full database backups daily at scheduled time (2:00 AM local time) with completion within 2-hour window.</p>
+<p><strong>NFR-249:</strong> The system shall perform automated incremental database backups every 6 hours capturing all changes since last backup.</p>
+<p><strong>NFR-250:</strong> The system shall perform automated file system backups (uploaded media, configuration) weekly with full backup completion within 4-hour window.</p>
+<p><strong>NFR-251:</strong> The system shall retain database backups for minimum 30 days with daily backups and 90 days for weekly backups.</p>
+<p><strong>NFR-252:</strong> The system shall store backup copies in geographically separate location from primary system, preventing data loss from localized disasters.</p>
+<p><strong>NFR-253:</strong> The system shall verify backup integrity through automated test restoration on monthly basis, confirming 100% data recoverability.</p>
+<p><strong>NFR-254:</strong> The system shall achieve Recovery Time Objective (RTO) of 4 hours for complete system restoration from backup.</p>
+<p><strong>NFR-255:</strong> The system shall achieve Recovery Point Objective (RPO) of 6 hours maximum data loss in disaster scenarios based on incremental backup frequency.</p>
+<p><strong>NFR-256:</strong> The system shall maintain documented backup restoration procedures enabling recovery by trained personnel within RTO target.</p>
+<p><strong>NFR-257:</strong> The system shall implement point-in-time recovery capability enabling restoration to specific timestamp within backup retention period.</p>
+<h3 id="73disasterrecovery">7.3 Disaster Recovery</h3>
+<p><strong>NFR-258:</strong> The system shall maintain disaster recovery plan documenting recovery procedures, responsible personnel, contact information, and recovery priorities.</p>
+<p><strong>NFR-259:</strong> The system shall test disaster recovery procedures annually through simulated failure scenarios, verifying RTO and RPO achievement.</p>
+<p><strong>NFR-260:</strong> The system shall maintain emergency contact list including technical personnel, hosting provider support, and key stakeholders with 24/7 availability.</p>
+<p><strong>NFR-261:</strong> The system shall implement automated monitoring with alerting to technical team within 5 minutes of critical service failure.</p>
+<p><strong>NFR-262:</strong> The system shall maintain system documentation in multiple locations (primary server, backup server, offline documentation) preventing loss during disasters.</p>
+<h3 id="74servicedegradation">7.4 Service Degradation</h3>
+<p><strong>NFR-263:</strong> The system shall implement graceful degradation strategy maintaining core read-only functionality (browsing plans, events, content) even when write operations (booking, registration) fail.</p>
+<p><strong>NFR-264:</strong> The system shall display service status notifications informing users of degraded functionality during partial outages.</p>
+<p><strong>NFR-265:</strong> The system shall implement request queuing for transactional operations during high load, processing requests when capacity available rather than rejecting immediately.</p>
+<p><strong>NFR-266:</strong> The system shall implement circuit breaker pattern for external dependencies (email service, payment gateway) preventing cascading failures when external services unavailable.</p>
+<h3 id="75monitoringandalerting">7.5 Monitoring and Alerting</h3>
+<p><strong>NFR-267:</strong> The system shall implement health check endpoint responding within 1 second indicating system operational status for uptime monitoring tools.</p>
+<p><strong>NFR-268:</strong> The system shall monitor critical metrics including: HTTP response times, database query times, error rates, disk space utilization, memory consumption, and CPU utilization.</p>
+<p><strong>NFR-269:</strong> The system shall generate alerts when monitored metrics exceed defined thresholds: response time &gt;5 seconds, error rate &gt;5%, disk space &gt;85% full, memory &gt;85% utilized.</p>
+<p><strong>NFR-270:</strong> The system shall deliver critical alerts to on-call personnel via multiple channels (email, SMS, push notification) within 5 minutes of threshold breach.</p>
+<p><strong>NFR-271:</strong> The system shall maintain monitoring dashboard displaying real-time system metrics and historical trends accessible to technical team.</p>
+<p><strong>NFR-272:</strong> The system shall implement external uptime monitoring from geographically distributed locations checking availability every 5 minutes.</p>
+<p><strong>NFR-273:</strong> The system shall maintain public status page displaying current system status, planned maintenance, and incident history accessible to all users.</p>
+<hr />
+<p><strong>Total Non-Functional Requirements: 273</strong></p>
+<p><strong>Document Classification:</strong> System Requirements<br />
+<strong>Last Updated:</strong> December 15, 2025<br />
+<strong>Status:</strong> Approved for Implementation<br />
+<strong>Next Review Date:</strong> June 15, 2026</p>
+<hr />
+<p><strong>Quality Assurance Sign-off:</strong></p>
+<p>This document has been reviewed and approved by the Quality Engineering team and meets the standards for academic evaluation and professional software development.</p>
+<p><strong>Prepared by:</strong> Software Quality Engineering Team<br />
+<strong>Reviewed by:</strong> Lead Quality Engineer<br />
+<strong>Approved by:</strong> Technical Architect</p>
+      </body>
+      </html>
+    
